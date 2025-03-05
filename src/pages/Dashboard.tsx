@@ -533,10 +533,10 @@ export function Dashboard() {
   // Componente para exibir o estado de aguardando resultados
   const AguardandoResultado = () => (
     <div className="flex flex-col items-center justify-center py-6 md:py-10">
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 md:p-4 rounded-full mb-3 md:mb-4 shadow-lg">
+      <div className="bg-gradient-to-r from-gray-400 to-gray-600 p-3 md:p-4 rounded-full mb-3 md:mb-4 shadow-lg">
         <Clock className="h-6 w-6 md:h-8 md:w-8 text-white animate-pulse" />
       </div>
-      <h3 className="text-lg md:text-xl font-medium text-blue-500 mb-2 text-center">Resultados em processamento</h3>
+      <h3 className="text-lg md:text-xl font-medium text-gray-700 mb-2 text-center">Resultados em processamento</h3>
       <p className="text-sm md:text-base text-gray-500 text-center max-w-md mb-4 md:mb-6 px-4">
         Seus resultados estão sendo analisados pela nossa equipe. 
         Em breve você poderá visualizar e baixar o relatório completo.
@@ -567,53 +567,22 @@ export function Dashboard() {
       // Verifica se contém a palavra MÊS
       const contemMes = paragrafo.toUpperCase().includes('MÊS');
       
-      // Verifica se é um título
-      const ehTitulo = paragrafo.length < 50 && 
-                       paragrafo === paragrafo.toUpperCase() && 
-                       paragrafo.trim().length > 0;
-      
-      if (ehTitulo) {
-        if (contemMes) {
-          return (
-            <h3 
-              key={index} 
-              className="text-lg font-bold py-3 px-4 my-3 bg-yellow-500 text-black rounded-md shadow-md border border-yellow-400"
-            >
-              {paragrafo}
-            </h3>
-          );
-        }
-        
-        return (
-          <h3 
-            key={index} 
-            className="text-lg font-bold pb-2 pt-4 text-gray-800 border-b-2 border-gray-300"
-          >
-            {paragrafo}
-          </h3>
-        );
-      }
-      
-      // Verifica se é um item numerado (começa com número seguido de traço ou ponto)
-      const ehItemNumerado = /^\d+[\s]*[-\.]\s+/.test(paragrafo);
-      
-      if (ehItemNumerado) {
+      if (contemMes) {
         return (
           <p 
             key={index} 
-            className="text-gray-700 leading-relaxed font-semibold pl-3 border-l-4 border-blue-500 py-2 my-2 bg-blue-50 rounded-r-md px-3 shadow-sm"
+            className="text-lg font-bold py-3 px-4 my-3 bg-yellow-500 text-black rounded-md shadow-md border border-yellow-400"
           >
             {paragrafo}
           </p>
         );
       }
       
+      // Para todos os outros textos, sem formatação especial
       return (
         <p 
           key={index} 
-          className={contemMes 
-            ? 'bg-yellow-500 text-black px-4 py-3 rounded-md shadow-md font-semibold my-3 border border-yellow-400' 
-            : 'text-gray-700 leading-relaxed py-1 my-1 font-medium'}
+          className="text-gray-700 py-1 my-1"
         >
           {paragrafo}
         </p>
