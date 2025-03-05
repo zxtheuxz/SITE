@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1A1A1A" />
+    <meta name="description" content="Área do Aluno - Alê Grimaldi" />
+    <title>Área do Aluno - Alê Grimaldi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --primary-color: #8E2DE2;
+        --secondary-color: #4A00E0;
+        --dark-bg: #1A1A1A;
+        --text-color: #FFFFFF;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --card-bg: #252525;
+        --border-radius: 8px;
+        --transition: all 0.3s ease;
+      }
+      
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      html, body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background-color: var(--dark-bg);
+        color: var(--text-color);
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+      }
+      
+      #root {
+        display: none;
+        height: 100%;
+        width: 100%;
+      }
+      
+      #splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--dark-bg);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      
+      /* Glitch Text Effect */
+      .glitch-text {
+        color: #fff;
+        font-size: clamp(2.5rem, 8vw, 5rem);
+        white-space: nowrap;
+        font-weight: 900;
+        position: relative;
+        margin: 0 auto;
+        user-select: none;
+      }
+
+      .glitch-text::after,
+      .glitch-text::before {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        color: #fff;
+        background-color: var(--dark-bg);
+        overflow: hidden;
+      }
+
+      .glitch-text::after {
+        left: 2px;
+        text-shadow: -2px 0 red;
+        animation: glitch-animation 3s infinite linear alternate-reverse;
+      }
+      
+      .glitch-text::before {
+        left: -2px;
+        text-shadow: 2px 0 cyan;
+        animation: glitch-animation 2s infinite linear alternate-reverse;
+      }
+
+      @keyframes glitch-animation {
+        0%   { clip-path: inset(20% 0 50% 0); }
+        5%   { clip-path: inset(10% 0 60% 0); }
+        10%  { clip-path: inset(15% 0 55% 0); }
+        15%  { clip-path: inset(25% 0 35% 0); }
+        20%  { clip-path: inset(30% 0 40% 0); }
+        25%  { clip-path: inset(40% 0 20% 0); }
+        30%  { clip-path: inset(10% 0 60% 0); }
+        35%  { clip-path: inset(15% 0 55% 0); }
+        40%  { clip-path: inset(25% 0 35% 0); }
+        45%  { clip-path: inset(30% 0 40% 0); }
+        50%  { clip-path: inset(20% 0 50% 0); }
+        55%  { clip-path: inset(10% 0 60% 0); }
+        60%  { clip-path: inset(15% 0 55% 0); }
+        65%  { clip-path: inset(25% 0 35% 0); }
+        70%  { clip-path: inset(30% 0 40% 0); }
+        75%  { clip-path: inset(40% 0 20% 0); }
+        80%  { clip-path: inset(20% 0 50% 0); }
+        85%  { clip-path: inset(10% 0 60% 0); }
+        90%  { clip-path: inset(15% 0 55% 0); }
+        95%  { clip-path: inset(25% 0 35% 0); }
+        100% { clip-path: inset(30% 0 40% 0); }
+      }
+      
+      /* Botão estilo do site da cliente */
+      .btn-primary {
+        background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 15px rgba(74, 0, 224, 0.3);
+      }
+      
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(74, 0, 224, 0.4);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="splash-screen">
+      <div class="glitch-text" data-text="Alê Grimaldi">Alê Grimaldi</div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script>
+      // Função para mostrar o app e esconder a tela de splash
+      function showApp() {
+        const root = document.getElementById('root');
+        const splash = document.getElementById('splash-screen');
+        
+        if (root && splash) {
+          root.style.display = 'block';
+          splash.style.opacity = '1';
+          splash.style.transition = 'opacity 0.5s ease-out';
+          
+          setTimeout(() => {
+            splash.style.opacity = '0';
+            setTimeout(() => {
+              splash.style.display = 'none';
+            }, 500);
+          }, 1000);
+        }
+      }
+      
+      window.addEventListener('load', function() {
+        setTimeout(showApp, 2000);
+      });
+      
+      // Fallback: mostrar o app após 5s mesmo se algo der errado
+      setTimeout(showApp, 5000);
+    </script>
+    
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html> 

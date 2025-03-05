@@ -1,0 +1,166 @@
+/* 
+ * Estilos específicos para o dashboard 
+ * Importado em App.tsx, Layout.tsx e Dashboard.tsx
+ */
+
+/* Definição de variáveis para o tema escuro */
+:root {
+  --brand-dark: #1A1A1A;
+  --brand-light: #FFFFFF;
+  --brand-light-blue: rgba(255, 255, 255, 0.7);
+  --brand-light-secondary: rgba(255, 255, 255, 0.5);
+  --brand-purple: #8E2DE2;
+  --brand-purple-light: rgba(142, 45, 226, 0.5);
+  --gradient-brand: linear-gradient(45deg, #8E2DE2, #4A00E0);
+  --shadow-glow-purple: 0 0 15px rgba(142, 45, 226, 0.5);
+}
+
+.dashboard-container {
+  min-height: 100vh;
+  background-color: var(--brand-dark);
+  color: var(--brand-light);
+  padding: 2rem;
+}
+
+.dashboard-header {
+  background-color: rgba(30, 30, 40, 0.7);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-card {
+  background-color: rgba(30, 30, 40, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(142, 45, 226, 0.2);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(142, 45, 226, 0.2);
+}
+
+.dashboard-icon-container {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-brand);
+  box-shadow: var(--shadow-glow-purple);
+  margin-right: 1rem;
+}
+
+.dashboard-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--brand-light);
+  margin-bottom: 0.5rem;
+  background: linear-gradient(to right, #8e2de2, #4a00e0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dashboard-subtitle {
+  font-size: 1rem;
+  color: var(--brand-light-blue);
+  margin-bottom: 2rem;
+}
+
+.dashboard-text {
+  color: var(--brand-light-secondary);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.dashboard-button {
+  background: var(--gradient-brand);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+}
+
+.dashboard-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow-purple);
+}
+
+.dashboard-button-secondary {
+  background: transparent;
+  border: 1px solid var(--brand-purple-light);
+  color: var(--brand-light);
+}
+
+.dashboard-button-secondary:hover {
+  background: rgba(142, 45, 226, 0.1);
+}
+
+.dashboard-button-outline {
+  background: transparent;
+  border: 1px solid var(--brand-purple);
+  color: var(--brand-purple);
+}
+
+.dashboard-button-outline:hover {
+  background: rgba(142, 45, 226, 0.05);
+  color: var(--brand-light);
+}
+
+/* Novos estilos para o dashboard */
+.dashboard-welcome {
+  margin-bottom: 2rem;
+}
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-stat-item {
+  display: flex;
+  align-items: center;
+}
+
+.dashboard-stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.dashboard-stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.dashboard-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--brand-light);
+  margin-bottom: 0.25rem;
+}
+
+.dashboard-stat-label {
+  font-size: 0.875rem;
+  color: var(--brand-light-blue);
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+} 

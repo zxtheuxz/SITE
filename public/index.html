@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <!-- Remover completamente qualquer favicon -->
+    <link rel="icon" href="data:,">
+    <!-- Desativar qualquer ícone para Apple -->
+    <link rel="apple-touch-icon" href="data:,">
+    <!-- Desativar qualquer manifesto -->
+    <link rel="manifest" href="data:,">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f7ff" />
+    <meta name="description" content="Portal de Saúde e Bem-estar - HealthTrack" />
+    <title>HealthTrack - Portal de Saúde e Bem-estar</title>
+
+    <!-- Estilos inline para a tela de splash -->
+    <style>
+      /* Reset e estilos base */
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f5f7ff 0%, #e0e6ff 100%) !important;
+        background-color: #f5f7ff !important;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      }
+
+      /* Esconder o root até que esteja pronto */
+      #root {
+        display: none;
+        background: transparent;
+        height: 100%;
+        width: 100%;
+      }
+
+      /* Tela de splash */
+      #splash-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f5f7ff 0%, #e0e6ff 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+
+      /* Logo animada */
+      .splash-logo {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 30px;
+        position: relative;
+      }
+
+      .splash-logo::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #8E2DE2, #4A00E0);
+        animation: pulse 1.5s ease-in-out infinite alternate;
+      }
+
+      .splash-logo::after {
+        content: "HT";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 40px;
+        font-weight: bold;
+        color: white;
+      }
+
+      /* Texto de carregamento */
+      .splash-text {
+        font-size: 18px;
+        color: #6B46C1;
+        margin-bottom: 20px;
+        opacity: 0;
+        animation: fadeIn 1s ease-in-out forwards 0.5s;
+      }
+
+      /* Spinner de carregamento */
+      .splash-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(107, 70, 193, 0.2);
+        border-radius: 50%;
+        border-top-color: #6B46C1;
+        animation: spin 1s linear infinite;
+      }
+
+      /* Animações */
+      @keyframes pulse {
+        0% {
+          transform: scale(0.95);
+          box-shadow: 0 0 0 0 rgba(107, 70, 193, 0.7);
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: 0 0 0 15px rgba(107, 70, 193, 0);
+        }
+      }
+
+      @keyframes fadeIn {
+        0% {
+          opacity: 0;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>Você precisa habilitar o JavaScript para executar este aplicativo.</noscript>
+    
+    <!-- Tela de splash -->
+    <div id="splash-screen">
+      <div class="splash-logo"></div>
+      <div class="splash-text">Carregando seu portal de saúde...</div>
+      <div class="splash-spinner"></div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script>
+      // Mostrar o conteúdo principal após o carregamento
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          document.getElementById('splash-screen').style.opacity = '0';
+          document.getElementById('splash-screen').style.transition = 'opacity 0.5s ease-out';
+          
+          setTimeout(function() {
+            document.getElementById('splash-screen').style.display = 'none';
+            document.getElementById('root').style.display = 'block';
+          }, 500);
+        }, 1500);
+      });
+    </script>
+  </body>
+</html> 
