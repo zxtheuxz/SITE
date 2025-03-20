@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { UserPlus, CheckCircle, Lock, Mail, User, Phone } from 'lucide-react';
+import { UserPlus, CheckCircle, Lock, Mail, User, Phone, Loader2, Check, X } from 'lucide-react';
 import Aurora from '../components/Aurora';
 import { useTheme } from '../contexts/ThemeContext';
 import { getThemeClass } from '../styles/theme';
@@ -13,17 +13,15 @@ export function Cadastro() {
   const isDarkMode = theme === 'dark';
   
   const themeClasses = {
-    background: getThemeClass(isDarkMode, 'background'),
-    text: getThemeClass(isDarkMode, 'text'),
-    textSecondary: getThemeClass(isDarkMode, 'textSecondary'),
-    card: `${getThemeClass(isDarkMode, 'cardBg')} border ${getThemeClass(isDarkMode, 'border')} ${getThemeClass(isDarkMode, 'shadow')}`,
-    button: getThemeClass(isDarkMode, 'button'),
-    buttonSecondary: getThemeClass(isDarkMode, 'buttonSecondary'),
-    input: getThemeClass(isDarkMode, 'input'),
-    select: getThemeClass(isDarkMode, 'select'),
-    label: getThemeClass(isDarkMode, 'label'),
-    helperText: getThemeClass(isDarkMode, 'helperText'),
-    errorText: isDarkMode ? 'text-red-400' : 'text-red-600'
+    background: 'bg-gradient-to-br from-gray-900 to-black',
+    text: 'text-white',
+    textSecondary: 'text-white/70',
+    card: 'bg-black/30 backdrop-blur-sm border border-white/10',
+    button: 'bg-orange-600 hover:bg-orange-700 text-white',
+    input: 'bg-white/10 border-white/20 text-white placeholder-white/50',
+    label: 'text-white',
+    select: 'bg-white/10 border-white/20 text-white',
+    errorText: 'text-red-400'
   };
 
   const [formData, setFormData] = useState({
@@ -40,34 +38,6 @@ export function Cadastro() {
   const [telefoneStatus, setTelefoneStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
   const [telefoneMessage, setTelefoneMessage] = useState('');
   const telefoneTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Garantir que o fundo seja preto ao carregar a página
-  useEffect(() => {
-    // Aplicar fundo preto
-    document.documentElement.style.backgroundColor = '#000000';
-    document.body.style.backgroundColor = '#000000';
-    document.documentElement.style.background = '#000000';
-    document.body.style.background = '#000000';
-    
-    // Adicionar um estilo global para garantir que o fundo seja preto
-    const style = document.createElement('style');
-    style.textContent = `
-      html, body, #root, .min-h-screen {
-        background: #000000 !important;
-        background-color: #000000 !important;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      // Limpar o estilo ao desmontar
-      document.head.querySelectorAll('style').forEach(s => {
-        if (s.textContent?.includes('background: #000000')) {
-          document.head.removeChild(s);
-        }
-      });
-    };
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -86,13 +56,13 @@ export function Cadastro() {
       clearTimeout(telefoneTimeoutRef.current);
     }
 
-    if (!telefone || telefone.length < 11) {
+    if (!telefone || telefone.length < 10) {
       setTelefoneStatus('idle');
       setTelefoneMessage('');
       return;
     }
 
-    if (telefone.length === 11) {
+    if (telefone.length >= 10 && telefone.length <= 11) {
       setTelefoneStatus('checking');
       
       telefoneTimeoutRef.current = setTimeout(async () => {
@@ -204,8 +174,8 @@ export function Cadastro() {
         throw new Error('As senhas não coincidem');
       }
 
-      if (formData.telefone.length !== 11) {
-        throw new Error('O telefone deve ter 11 dígitos (DDD + número)');
+      if (formData.telefone.length < 10 || formData.telefone.length > 11) {
+        throw new Error('O telefone deve ter 10 ou 11 dígitos (DDD + número)');
       }
 
       // VERIFICAÇÃO ADICIONAL: Listar todos os telefones na tabela de perfis para debug
@@ -322,16 +292,25 @@ export function Cadastro() {
 
   if (success) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${themeClasses.background}`}>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
         <Aurora />
         
-        <div className={`max-w-md w-full space-y-8 ${themeClasses.card} p-8 rounded-xl relative z-10`}>
-          <div className="flex flex-col items-center justify-center text-center">
-            <CheckCircle className="h-16 w-16 text-orange-500 mb-4" />
-            <h2 className={`text-2xl font-bold mb-2 ${themeClasses.text}`}>
+        <div className={`w-full max-w-md space-y-8 ${themeClasses.card} p-8 rounded-xl relative z-10 mx-4`}>
+          <div className="flex flex-col items-center">
+            <img
+              src="/images/frango.png"
+              alt="Ícone Frango"
+              className="w-12 h-12 mb-4"
+            />
+            <img
+              src="/images/extermina-frango-logo.png"
+              alt="Extermina Frango"
+              className="w-64 mb-8"
+            />
+            <h2 className="text-center text-3xl font-extrabold text-white">
               Cadastro realizado com sucesso!
             </h2>
-            <p className={`${themeClasses.textSecondary} mb-6`}>
+            <p className="mt-2 text-center text-white/70">
               Sua conta foi criada. Você já pode fazer login.
             </p>
             <button
@@ -347,23 +326,34 @@ export function Cadastro() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${themeClasses.background}`}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
       <Aurora />
       
-      <div className={`max-w-md w-full space-y-8 ${themeClasses.card} p-8 rounded-xl relative z-10`}>
-        <div>
-          <h2 className={`text-center text-3xl font-extrabold ${themeClasses.text}`}>
+      <div className={`w-full max-w-md space-y-8 ${themeClasses.card} p-8 rounded-xl relative z-10 mx-4`}>
+        <div className="flex flex-col items-center">
+          <img
+            src="/images/frango.png"
+            alt="Ícone Frango"
+            className="w-12 h-12 mb-4"
+          />
+          <img
+            src="/images/extermina-frango-logo.png"
+            alt="Extermina Frango"
+            className="w-64 mb-8"
+          />
+          <h2 className="text-center text-3xl font-extrabold text-white">
             Criar nova conta
           </h2>
-          <p className={`mt-2 text-center ${themeClasses.textSecondary}`}>
+          <p className="mt-2 text-center text-white/70">
             Ou{' '}
-            <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500">
+            <Link to="/login" className="font-medium text-orange-500 hover:text-orange-400">
               faça login em sua conta existente
             </Link>
           </p>
         </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          <div className="rounded-md -space-y-px">
             <div className="mb-4">
               <label htmlFor="nomeCompleto" className={`block text-sm font-medium ${themeClasses.label}`}>
                 Nome Completo
@@ -377,10 +367,10 @@ export function Cadastro() {
                   value={formData.nomeCompleto}
                   onChange={handleChange}
                   className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
-                  placeholder="Digite seu nome completo"
+                  placeholder="Ex: João da Silva"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-white/50" />
                 </div>
               </div>
             </div>
@@ -399,17 +389,17 @@ export function Cadastro() {
                   value={formData.email}
                   onChange={handleChange}
                   className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
-                  placeholder="Digite seu e-mail"
+                  placeholder="Ex: joao.silva@email.com"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-white/50" />
                 </div>
               </div>
             </div>
 
             <div className="mb-4">
               <label htmlFor="telefone" className={`block text-sm font-medium ${themeClasses.label}`}>
-                Telefone
+                Telefone (DDD + Número)
               </label>
               <div className="mt-1 relative">
                 <input
@@ -420,14 +410,26 @@ export function Cadastro() {
                   value={formData.telefone}
                   onChange={handleChange}
                   className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
-                  placeholder="Digite seu telefone"
+                  placeholder="Ex: 11999999999"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
+                  {telefoneStatus === 'checking' ? (
+                    <Loader2 className="h-5 w-5 text-white/50 animate-spin" />
+                  ) : telefoneStatus === 'valid' ? (
+                    <Check className="h-5 w-5 text-green-500" />
+                  ) : telefoneStatus === 'invalid' ? (
+                    <X className="h-5 w-5 text-red-500" />
+                  ) : (
+                    <Phone className="h-5 w-5 text-white/50" />
+                  )}
                 </div>
               </div>
+              <p className="mt-1 text-sm text-white/50">Digite apenas números: DDD + número (10 ou 11 dígitos)</p>
               {telefoneMessage && (
-                <p className={`mt-2 text-sm ${telefoneStatus === 'valid' ? 'text-green-600' : themeClasses.errorText}`}>
+                <p className={`mt-2 text-sm flex items-center gap-2 ${telefoneStatus === 'valid' ? 'text-green-400' : themeClasses.errorText}`}>
+                  {telefoneStatus === 'checking' && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {telefoneStatus === 'valid' && <Check className="h-4 w-4" />}
+                  {telefoneStatus === 'invalid' && <X className="h-4 w-4" />}
                   {telefoneMessage}
                 </p>
               )}
@@ -437,18 +439,25 @@ export function Cadastro() {
               <label htmlFor="sexo" className={`block text-sm font-medium ${themeClasses.label}`}>
                 Sexo
               </label>
-              <select
-                id="sexo"
-                name="sexo"
-                required
-                value={formData.sexo}
-                onChange={handleChange}
-                className={`${themeClasses.select} block w-full px-3 py-2 rounded-md`}
-              >
-                <option value="">Selecione seu sexo</option>
-                <option value="masculino">Masculino</option>
-                <option value="feminino">Feminino</option>
-              </select>
+              <div className="mt-1 relative">
+                <select
+                  id="sexo"
+                  name="sexo"
+                  required
+                  value={formData.sexo}
+                  onChange={handleChange}
+                  className={`${themeClasses.input} block w-full px-3 py-2 rounded-md appearance-none`}
+                >
+                  <option value="" disabled className="bg-gray-900 text-white">Selecione seu sexo</option>
+                  <option value="masculino" className="bg-gray-900 text-white">Masculino</option>
+                  <option value="feminino" className="bg-gray-900 text-white">Feminino</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-white/50" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             <div className="mb-4">
@@ -465,10 +474,10 @@ export function Cadastro() {
                   value={formData.senha}
                   onChange={handleChange}
                   className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
-                  placeholder="Digite sua senha"
+                  placeholder="Mínimo 6 caracteres"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-white/50" />
                 </div>
               </div>
             </div>
@@ -487,17 +496,17 @@ export function Cadastro() {
                   value={formData.confirmarSenha}
                   onChange={handleChange}
                   className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
-                  placeholder="Confirme sua senha"
+                  placeholder="Digite a senha novamente"
                 />
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-white/50" />
                 </div>
               </div>
             </div>
           </div>
 
           {erro && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="rounded-md bg-red-900/50 border border-red-500/50 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -505,7 +514,7 @@ export function Cadastro() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className={`text-sm font-medium ${themeClasses.errorText}`}>
+                  <h3 className="text-sm font-medium text-red-400">
                     {erro}
                   </h3>
                 </div>
@@ -513,18 +522,16 @@ export function Cadastro() {
             </div>
           )}
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`${themeClasses.button} group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2`}
-            >
-              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                <UserPlus className="h-5 w-5 text-white" />
-              </span>
-              {loading ? 'Cadastrando...' : 'Cadastrar'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+          >
+            <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+              <UserPlus className="h-5 w-5 text-orange-500 group-hover:text-orange-400" />
+            </span>
+            {loading ? 'Cadastrando...' : 'Cadastrar'}
+          </button>
         </form>
       </div>
     </div>

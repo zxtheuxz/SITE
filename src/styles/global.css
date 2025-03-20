@@ -12,6 +12,21 @@
     @apply transition-none;
   }
 
+  /* Estilos base */
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-white text-gray-900;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  }
+
   /* Estilos base para o modo claro */
   :root {
     --primary-color: #8E2DE2;
@@ -106,21 +121,11 @@
 /* Classes utilitárias personalizadas */
 @layer components {
   .card {
-    @apply bg-white dark:bg-slate-800/50 
-           rounded-2xl p-8 
-           shadow-lg dark:shadow-slate-900/50 
-           border border-gray-100 dark:border-blue-500/10 
-           backdrop-blur-sm 
-           transition-all duration-300;
+    @apply bg-white rounded-lg p-6 shadow-md border border-gray-200;
   }
 
   .btn-primary {
-    @apply bg-gradient-to-br from-blue-500 to-blue-600 
-           hover:from-blue-600 hover:to-blue-700 
-           text-white 
-           shadow-md hover:shadow-lg 
-           transform hover:-translate-y-0.5 
-           transition-all duration-300;
+    @apply bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 font-medium;
   }
 
   .btn-secondary {
