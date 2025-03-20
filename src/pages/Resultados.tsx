@@ -1,39 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ClipboardCheck, Scale, ArrowLeft, Loader2, Download, Clock, Sun, Moon } from 'lucide-react';
+import { ClipboardCheck, Scale, ArrowLeft, Loader2, Download, Clock, Sun, Moon, FileText, Activity, Heart } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Layout } from '../components/Layout';
 import { Card } from '../components/Card';
 import { Button } from '../components/Button';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Adicione estas classes ao seu arquivo de estilos globais ou como uma constante
 const themeStyles = {
   light: {
     background: "bg-gradient-to-b from-gray-100 to-white",
-    text: "text-slate-800",
-    textSecondary: "text-slate-600",
+    text: "text-gray-800",
+    textSecondary: "text-gray-600",
     card: "bg-white shadow-lg border border-gray-200",
-    button: "bg-blue-600 hover:bg-blue-700 text-white",
+    button: "bg-orange-500 hover:bg-orange-600 text-white",
     buttonSecondary: "bg-gray-200 hover:bg-gray-300 text-gray-800",
-    input: "bg-white border border-gray-300 focus:border-blue-500",
+    input: "bg-white border border-gray-300 focus:border-orange-500",
     scrollbar: {
       track: "bg-gray-200",
-      thumb: "bg-blue-400/50 hover:bg-blue-400/70"
+      thumb: "bg-orange-400/50 hover:bg-orange-400/70"
     }
   },
   dark: {
     background: "bg-gradient-to-b from-slate-900 to-slate-800",
     text: "text-white",
-    textSecondary: "text-blue-300",
-    card: "bg-slate-800/50 backdrop-blur-sm border border-blue-500/20",
-    button: "bg-blue-600 hover:bg-blue-700 text-white",
+    textSecondary: "text-gray-300",
+    card: "bg-slate-800/80 backdrop-blur-sm border border-orange-500/20",
+    button: "bg-orange-500 hover:bg-orange-600 text-white",
     buttonSecondary: "bg-slate-700 hover:bg-slate-600 text-white",
-    input: "bg-slate-700 border border-slate-600 focus:border-blue-500",
+    input: "bg-slate-700 border border-slate-600 focus:border-orange-500",
     scrollbar: {
       track: "bg-slate-700",
-      thumb: "bg-blue-500/50 hover:bg-blue-500/70"
+      thumb: "bg-orange-500/50 hover:bg-orange-500/70"
     }
   }
 };
@@ -54,8 +55,11 @@ export function Resultados() {
   const [perfilLiberado, setPerfilLiberado] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const location = useLocation();
-  const [isDarkMode, setIsDarkMode] = useState(true); // ou integre com seu sistema de tema
-  const theme = isDarkMode ? themeStyles.dark : themeStyles.light;
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  const themeStyle = isDarkMode ? themeStyles.dark : themeStyles.light;
+  const [activeTab, setActiveTab] = useState<'fisica' | 'nutricional'>('fisica');
+  const [error, setError] = useState<string | null>(null);
   
   // Obter o ID da query string
   const queryParams = new URLSearchParams(location.search);
@@ -70,12 +74,12 @@ export function Resultados() {
       }
       
       .custom-scrollbar::-webkit-scrollbar-track {
-        ${theme.scrollbar.track};
+        ${themeStyle.scrollbar.track};
         border-radius: 10px;
       }
       
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        ${theme.scrollbar.thumb};
+        ${themeStyle.scrollbar.thumb};
         border-radius: 10px;
       }
     `;
@@ -394,6 +398,74 @@ export function Resultados() {
     console.log('- Gerando PDF Nutricional:', gerandoNutricional);
   }, [gerandoFisica, gerandoNutricional]);
 
+  // Adicionar efeito de fundo e garantir que o conteúdo seja visível
+  useEffect(() => {
+    const background = isDarkMode 
+      ? '#0f172a'
+      : '#ffffff';
+    
+    document.documentElement.style.background = background;
+    document.documentElement.style.backgroundColor = background;
+    document.body.style.background = background;
+    document.body.style.backgroundColor = background;
+    
+    // Remover o padrão de fundo
+    document.body.style.backgroundImage = 'none';
+    
+    // Garantir que o conteúdo seja visível
+    const resultadosContainer = document.querySelector('.resultados-container');
+    if (resultadosContainer) {
+      (resultadosContainer as HTMLElement).style.display = 'block';
+      (resultadosContainer as HTMLElement).style.visibility = 'visible';
+      (resultadosContainer as HTMLElement).style.opacity = '1';
+    }
+  }, [isDarkMode]);
+
+  // Adicionar estilos de scrollbar personalizados
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+      
+      ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+      }
+      
+      ::-webkit-scrollbar-thumb {
+        background: rgba(251, 146, 60, 0.5);
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+      
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(251, 146, 60, 0.7);
+      }
+      
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+      
+      .animate-slideIn {
+        animation: slideIn 0.5s ease-out forwards;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
   if (carregando) {
     return (
       <Layout>
@@ -406,23 +478,20 @@ export function Resultados() {
 
   // Componente para exibir o estado de aguardando resultados
   const AguardandoResultado = () => (
-    <div className="flex flex-col items-center justify-center py-10">
-      <div className="bg-gradient-brand p-4 rounded-full mb-4 shadow-glow-blue">
-        <Clock className="h-8 w-8 text-white animate-pulse" />
+    <div className="flex flex-col items-center justify-center py-8 md:py-12">
+      <div className="bg-orange-600/20 rounded-full p-4 mb-4 shadow-lg shadow-orange-900/10">
+        <Clock className="w-10 h-10 text-orange-400" />
       </div>
-      <h3 className="text-xl font-medium text-brand-blue mb-2 text-center">Resultados em processamento</h3>
-      <p className="text-gray-100 text-center max-w-md mb-6">
-        Seus resultados estão sendo analisados pela nossa equipe. 
-        Em breve você poderá visualizar e baixar o relatório completo.
+      <h3 className="text-xl font-semibold text-white mb-2">Avaliação em Análise</h3>
+      <p className="text-gray-300 text-center max-w-md mb-4">
+        Suas avaliações estão sendo analisadas por nossos especialistas. 
+        Em breve seus resultados estarão disponíveis.
       </p>
-      <Button
-        variant="secondary"
-        onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        Voltar ao Dashboard
-      </Button>
+      <div className="flex space-x-2 items-center">
+        <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+        <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-100"></span>
+        <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse delay-200"></span>
+      </div>
     </div>
   );
 
@@ -430,7 +499,11 @@ export function Resultados() {
   const renderizarResultado = (conteudo: string | null) => {
     if (!conteudo) {
       return (
-        <div className="text-center text-white italic font-medium p-4 bg-gray-800 rounded-lg">
+        <div className={`text-center p-4 ${
+          isDarkMode 
+            ? 'text-gray-400' 
+            : 'text-gray-900'
+        }`}>
           Resultado não disponível
         </div>
       );
@@ -439,178 +512,158 @@ export function Resultados() {
     const paragrafos = conteudo.split('\n');
     
     return paragrafos.map((paragrafo, index) => {
-      // Verifica se é uma linha em branco
       const ehLinhaEmBranco = paragrafo.trim().length === 0;
       
       if (ehLinhaEmBranco) {
-        return <div key={index} className="h-3"></div>;
+        return <div key={index} className="h-4"></div>;
       }
       
-      // Verifica se contém a palavra MÊS
       const contemMes = paragrafo.toUpperCase().includes('MÊS');
       
-      // Verifica se é um título
-      const ehTitulo = paragrafo.length < 50 && 
-                       paragrafo === paragrafo.toUpperCase() && 
-                       paragrafo.trim().length > 0;
-      
-      if (ehTitulo) {
-        if (contemMes) {
-          return (
-            <h3 
-              key={index} 
-              className="text-lg font-bold py-3 px-4 my-3 bg-yellow-500 text-black rounded-md shadow-md border-2 border-yellow-400"
-            >
-              {paragrafo}
-            </h3>
-          );
-        }
-        
+      if (contemMes) {
         return (
-          <h3 
+          <div 
             key={index} 
-            className="text-lg font-bold pb-2 pt-4 text-white border-b-2 border-white/70"
+            className="text-base py-3 px-4 my-4 bg-orange-500 text-white rounded-lg"
           >
             {paragrafo}
-          </h3>
-        );
-      }
-      
-      // Verifica se é um item numerado (começa com número seguido de traço ou ponto)
-      const ehItemNumerado = /^\d+[\s]*[-\.]\s+/.test(paragrafo);
-      
-      if (ehItemNumerado) {
-        return (
-          <p 
-            key={index} 
-            className="text-white leading-relaxed font-semibold pl-3 border-l-4 border-blue-500 py-2 my-2 bg-blue-800/60 rounded-r-md px-3 shadow-sm"
-          >
-            {paragrafo}
-          </p>
+          </div>
         );
       }
       
       return (
-        <p 
+        <div 
           key={index} 
-          className={contemMes 
-            ? 'bg-yellow-500 text-black px-4 py-3 rounded-md shadow-md font-semibold my-3 border-2 border-yellow-400' 
-            : 'text-white leading-relaxed py-1 my-1 font-medium'}
+          className={`text-base py-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}
         >
           {paragrafo}
-        </p>
+        </div>
       );
     });
   };
 
   return (
     <Layout>
-      <div className="mb-8 flex items-center">
-        <Button
-          variant="secondary"
-          onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Voltar
-        </Button>
+      <div className={`resultados-container p-6 ${
+        isDarkMode 
+          ? 'bg-slate-900/50 text-white' 
+          : 'bg-white text-gray-900'
+      }`}>
+        <div className="resultados-header mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <button 
+                onClick={() => navigate('/dashboard')}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors self-start"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Início
+              </button>
+              <div className="flex items-center">
+                <div className="bg-orange-500 p-2 rounded-lg mr-3">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <h1 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Meus Resultados</h1>
+              </div>
+            </div>
+            {!carregando && perfilLiberado && (
+              <button
+                onClick={() => gerarPDF(activeTab === 'fisica' ? 'FISICA' : 'NUTRICIONAL')}
+                disabled={gerandoFisica || gerandoNutricional}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start sm:self-auto"
+              >
+                {gerandoFisica || gerandoNutricional ? (
+                  <>
+                    <span className="animate-pulse mr-2">●</span>
+                    Gerando PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Baixar PDF
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+          <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-900'}`}>
+            Visualize os resultados das suas avaliações e recomendações personalizadas
+          </p>
+        </div>
+
+        {perfil?.liberado !== 'sim' ? (
+          <div className="animate-fadeIn">
+            <AguardandoResultado />
+          </div>
+        ) : (
+          <div className="animate-fadeIn">
+            <div className="mb-6">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4 w-[400px] flex-shrink-0">
+                <button
+                  onClick={() => setActiveTab('fisica')}
+                  className={`inline-flex items-center justify-center w-[200px] px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'fisica'
+                      ? 'bg-orange-500 text-white'
+                      : isDarkMode 
+                        ? 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  <Activity className="h-5 w-5 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Avaliação Física</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('nutricional')}
+                  className={`inline-flex items-center justify-center w-[200px] px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'nutricional'
+                      ? 'bg-orange-500 text-white'
+                      : isDarkMode 
+                        ? 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  <Heart className="h-5 w-5 mr-2 flex-shrink-0" />
+                  <span className="whitespace-nowrap">Avaliação Nutricional</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="w-full max-w-[1200px] mx-auto">
+              {activeTab === 'fisica' ? (
+                <div className={`${isDarkMode ? 'bg-slate-800/80 border-orange-500/20' : 'bg-white border-gray-200'} border rounded-xl p-6 shadow-lg animate-slideIn`}>
+                  <div className="flex items-center mb-6">
+                    <div className="bg-orange-500 p-2 rounded-lg mr-3">
+                      <Activity className="h-5 w-5 text-white" />
+                    </div>
+                    <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Resultado da Avaliação Física
+                    </h2>
+                  </div>
+                  
+                  <div id="resultado-fisica" className="space-y-4">
+                    {renderizarResultado(perfil?.resultado_fisica || null)}
+                  </div>
+                </div>
+              ) : (
+                <div className={`${isDarkMode ? 'bg-slate-800/80 border-orange-500/20' : 'bg-white border-gray-200'} border rounded-xl p-6 shadow-lg animate-slideIn`}>
+                  <div className="flex items-center mb-6">
+                    <div className="bg-orange-500 p-2 rounded-lg mr-3">
+                      <Heart className="h-5 w-5 text-white" />
+                    </div>
+                    <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Resultado da Avaliação Nutricional
+                    </h2>
+                  </div>
+                  
+                  <div id="resultado-nutricional" className="space-y-4">
+                    {renderizarResultado(perfil?.resultado_nutricional || null)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-      
-      <Card>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-white/10">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 text-white">
-              Resultados da Avaliação
-            </h1>
-            <p className="text-brand-blue">
-              {perfil?.nome ? `Resultados para ${perfil.nome}` : 'Carregando dados...'}
-            </p>
-          </div>
-          
-          {!perfilLiberado && (
-            <div className="flex items-center mt-4 md:mt-0 px-4 py-3 bg-amber-600/40 border-amber-500/70 rounded-lg border shadow-md">
-              <Clock className="h-5 w-5 mr-2 text-amber-200" />
-              <span className="text-amber-100 font-medium">
-                Aguardando liberação dos resultados
-              </span>
-            </div>
-          )}
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold flex items-center text-white bg-brand-blue/20 px-4 py-2 rounded-lg">
-                <ClipboardCheck className="h-5 w-5 mr-2 text-brand-blue" />
-                Avaliação Física
-              </h2>
-              
-              {perfilLiberado && perfil?.resultado_fisica && (
-                <div data-button-id="download-fisica" className="relative">
-                  <Button
-                    onClick={() => {
-                      if (!gerandoFisica) {
-                        gerarPDF('FISICA');
-                      }
-                    }}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-                    disabled={gerandoFisica}
-                  >
-                    <Download className="h-5 w-5" />
-                    {gerandoFisica ? 'Gerando PDF...' : 'Baixar PDF'}
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            <div id="resultado-fisica">
-              {!perfilLiberado ? (
-                <AguardandoResultado />
-              ) : (
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar bg-gray-800 rounded-lg p-6 border-2 border-blue-500/30 shadow-xl">
-                  {renderizarResultado(perfil?.resultado_fisica || null)}
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold flex items-center text-white bg-brand-blue/20 px-4 py-2 rounded-lg">
-                <Scale className="h-5 w-5 mr-2 text-brand-blue" />
-                Avaliação Nutricional
-              </h2>
-              
-              {perfilLiberado && perfil?.resultado_nutricional && (
-                <div data-button-id="download-nutricional" className="relative">
-                  <Button
-                    onClick={() => {
-                      if (!gerandoNutricional) {
-                        gerarPDF('NUTRICIONAL');
-                      }
-                    }}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                    disabled={gerandoNutricional}
-                  >
-                    <Download className="h-5 w-5" />
-                    {gerandoNutricional ? 'Gerando PDF...' : 'Baixar PDF'}
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            <div id="resultado-nutricional">
-              {!perfilLiberado ? (
-                <AguardandoResultado />
-              ) : (
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar bg-gray-800 rounded-lg p-6 border-2 border-blue-500/30 shadow-xl">
-                  {renderizarResultado(perfil?.resultado_nutricional || null)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </Card>
     </Layout>
   );
 } 

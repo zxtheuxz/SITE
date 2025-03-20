@@ -11,28 +11,30 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    // Sempre iniciar com o tema escuro para o dashboard
-    return 'dark';
+    // Verificar se há uma preferência salva no localStorage
+    const savedTheme = localStorage.getItem('theme') as Theme;
+    
+    // Verificar se há uma preferência do sistema
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Iniciar com o tema salvo, ou preferência do sistema, ou claro por padrão
+    return savedTheme || (prefersDark ? 'dark' : 'light');
   });
 
   useEffect(() => {
-    // Garantir que o fundo seja escuro
-    document.documentElement.style.backgroundColor = '#1A1A1A';
-    document.body.style.backgroundColor = '#1A1A1A';
-    
-    // Aplica a classe 'dark' no html quando necessário
+    // Aplicar tema ao documento
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
     
-    // Salva o tema no localStorage
+    // Salvar tema no localStorage
     localStorage.setItem('theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   return (

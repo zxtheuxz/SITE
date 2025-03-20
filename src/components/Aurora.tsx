@@ -121,10 +121,10 @@ interface AuroraProps {
 
 export default function Aurora(props: AuroraProps) {
   const {
-    colorStops = ["#00d8ff", "#7cff67", "#00d8ff"],
+    colorStops = ["#ff5e00", "#ff9100", "#ffb700"],
     amplitude = 1.0,
     blend = 0.5,
-    speed = 1.0
+    speed = 1.5
   } = props;
   const propsRef = useRef(props);
   propsRef.current = props;
@@ -144,7 +144,12 @@ export default function Aurora(props: AuroraProps) {
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-    gl.canvas.style.backgroundColor = 'transparent';
+    gl.canvas.style.backgroundColor = '#000000';
+
+    // Garantir que o fundo seja preto
+    document.body.style.backgroundColor = '#000000';
+    document.documentElement.style.backgroundColor = '#000000';
+    ctn.style.backgroundColor = '#000000';
 
     let program: Program;
 

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Scale, AlertCircle, CheckCircle, Loader2, ClipboardCheck, ArrowLeft } from 'lucide-react';
+import { Scale, AlertCircle, CheckCircle, Loader2, ClipboardCheck, ArrowLeft, Heart, User, Sun, Moon } from 'lucide-react';
 import { Layout } from '../components/Layout';
+import { useTheme } from '../contexts/ThemeContext';
+import { getThemeClass } from '../styles/theme';
+import TrueFocus from '../components/TrueFocus';
 
 // Estilos de tema consistentes com o formulário masculino
 const themeStyles = {
@@ -33,30 +36,14 @@ interface FormData {
   tem_filhos: boolean;
   quantidade_filhos: number;
   objetivo: string;
-  // nome?: string; // Removido pois será obtido do cadastro do cliente
-  
-  // Medidas
   peso: string;
   altura: string;
   peso_habitual: string;
   perda_peso_recente: string;
   ganho_peso_recente: string;
   percepcao_corporal: string;
-  
-  // Campos de controle da interface
-  tem_doencas_ginecologicas: boolean;
-  tem_historico_familiar: boolean;
-  tem_suspeita_doenca: boolean;
-  tem_doencas_repetitivas: boolean;
-  usa_contraceptivo: boolean;
-  tem_intolerancia: boolean;
-  
-  // Resto dos campos do formulário
-  doencas_ginecologicas: string[];
-  faz_acompanhamento_periodico: boolean;
-  suspeita_doenca: string;
-  doencas_repetitivas: string;
-  historico_familiar_ginecologico: string[];
+
+  // Saúde
   idade_primeira_menstruacao: string;
   ciclo_menstrual_regular: boolean;
   duracao_ciclo_menstrual: string;
@@ -64,62 +51,75 @@ interface FormData {
   sintomas_tpm: string[];
   sintoma_tpm_principal: string;
   tpm_afeta_alimentacao: string;
-  
-  // Histórico Gestacional
+  doencas_ginecologicas: string[];
+  faz_acompanhamento_periodico: boolean;
+  suspeita_doenca: string;
+  doencas_repetitivas: string;
+  historico_familiar_ginecologico: string[];
+
+  // Estilo de Vida e História Gestacional
   ja_engravidou: boolean;
   quantidade_gestacoes: number;
   tipos_parto: string[];
   teve_perda_gestacional: boolean;
-  tentando_engravidar: boolean;     
+  tentando_engravidar: boolean;
+  usa_contraceptivo: boolean;
   metodo_contraceptivo: string;
   tempo_uso_contraceptivo: string;
   libido: string;
-  
-  // Estilo de Vida
   nivel_estresse: number;
   fumante: boolean;
-  consumo_alcool: boolean;
-  horas_sono: string;
+  consumo_alcool: string;
+  horas_sono: number;
   qualidade_sono: string;
   pratica_exercicios: boolean;
+  frequencia_exercicios: string;
+  tipo_exercicios: string;
   detalhes_exercicios: string;
-  consumo_agua: string;
-  
-  // Hábitos Intestinais
+
+  // Hábitos Alimentares e Intestinais
   intestino_regular: boolean;
-  frequencia_intestinal: string;
+  frequencia_evacuacao: string;
   consistencia_fezes: string;
   tem_constipacao: boolean;
   tem_diarreia: boolean;
-  frequencia_evacuacao: string;
   dificuldade_evacuar: boolean;
   sangramento_evacuar: boolean;
   observacoes_intestinais: string;
-  
-  // Hábitos Alimentares
   intolerancia_alimentar: string[];
   alimentos_essenciais: string[];
   preferencia_sabor: string;
   aversao_alimentar: string[];
   horario_mais_fome: string;
-  rotina_diaria: string;
-  rotina_alimentar: string;
-  diario_alimentar: string;
-  tipo_mastigacao?: string;
   numero_refeicoes: string;
   local_refeicoes: string;
   consumo_agua_litros: string;
   velocidade_comer: string;
   mastigacao: string;
   belisca_entre_refeicoes: boolean;
+  rotina_diaria: string;
+  rotina_alimentar: string;
+  diario_alimentar: string;
   alergias_alimentares: string;
   preferencias_alimentares: string;
+
+  // Adicionar campos que faltam
+  tem_doencas_ginecologicas: boolean;
+  tem_suspeita_doenca: boolean;
+  tem_historico_familiar: boolean;
+  tem_intolerancia: boolean;
+}
+
+interface FormErrors {
+  [key: string]: string;
 }
 
 export function AvaliacaoNutricionalFeminina() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isViewMode = searchParams.get('mode') === 'view';
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === 'dark';
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState(false);
@@ -130,8 +130,50 @@ export function AvaliacaoNutricionalFeminina() {
   const [confirmedStep4, setConfirmedStep4] = useState(false);
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const theme = themeStyles.light;
   
+  // Usando o getThemeClass para obter as classes do tema
+  const themeClasses = {
+    background: isDarkMode ? 'bg-gradient-to-br from-gray-900 to-gray-800' : 'bg-gradient-to-br from-blue-50 to-indigo-100',
+    text: isDarkMode ? 'text-white' : 'text-gray-800',
+    textSecondary: isDarkMode ? 'text-gray-300' : 'text-gray-600',
+    button: isDarkMode 
+      ? 'bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200'
+      : 'bg-orange-500 hover:bg-orange-600 text-white transition-colors duration-200',
+    buttonSecondary: isDarkMode
+      ? 'bg-gray-700 hover:bg-gray-600 text-white transition-colors duration-200'
+      : 'bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 transition-colors duration-200',
+    card: isDarkMode 
+      ? 'bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg'
+      : 'bg-white border border-gray-200 rounded-xl p-6 shadow-lg',
+    cardTitle: isDarkMode ? 'text-white text-xl font-semibold' : 'text-gray-800 text-xl font-semibold',
+    label: isDarkMode ? 'block text-gray-300 mb-2' : 'block text-gray-700 mb-2',
+    input: isDarkMode
+      ? 'bg-gray-700 border border-gray-600 text-white rounded-lg w-full p-2.5 focus:ring-1 focus:ring-orange-500 focus:border-orange-500'
+      : 'bg-white border border-gray-300 text-gray-800 rounded-lg w-full p-2.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
+    select: isDarkMode
+      ? 'bg-gray-700 border border-gray-600 text-white rounded-lg w-full p-2.5 focus:ring-1 focus:ring-orange-500 focus:border-orange-500'
+      : 'bg-white border border-gray-300 text-gray-800 rounded-lg w-full p-2.5 focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
+    radio: isDarkMode
+      ? 'text-orange-500 bg-gray-700 border-gray-600 focus:ring-orange-500'
+      : 'text-orange-500 bg-white border-gray-300 focus:ring-orange-500',
+    radioLabel: isDarkMode ? 'text-gray-300' : 'text-gray-700',
+    errorText: 'text-red-500 text-sm mt-1',
+    formSection: isDarkMode 
+      ? 'bg-gray-800/50 rounded-xl p-6 backdrop-blur-sm'
+      : 'bg-white/50 rounded-xl p-6 backdrop-blur-sm shadow-lg',
+    stepIndicator: {
+      active: isDarkMode
+        ? 'bg-orange-500 text-white border-2 border-orange-500'
+        : 'bg-orange-500 text-white border-2 border-orange-500',
+      completed: isDarkMode
+        ? 'bg-green-500 text-white border-2 border-green-500'
+        : 'bg-green-500 text-white border-2 border-green-500',
+      inactive: isDarkMode
+        ? 'bg-gray-700 text-gray-400 border-2 border-gray-600'
+        : 'bg-gray-100 text-gray-600 border-2 border-gray-300'
+    }
+  };
+
   const [formData, setFormData] = useState<FormData>({
     // Dados Pessoais
     data_nascimento: '',
@@ -139,30 +181,14 @@ export function AvaliacaoNutricionalFeminina() {
     tem_filhos: false,
     quantidade_filhos: 0,
     objetivo: '',
-    // nome: '', // Removido pois será obtido do cadastro do cliente
-    
-    // Medidas
     peso: '',
     altura: '',
     peso_habitual: '',
     perda_peso_recente: '',
     ganho_peso_recente: '',
     percepcao_corporal: '',
-    
-    // Campos de controle da interface
-    tem_doencas_ginecologicas: false,
-    tem_historico_familiar: false,
-    tem_suspeita_doenca: false,
-    tem_doencas_repetitivas: false,
-    usa_contraceptivo: false,
-    tem_intolerancia: false,
-    
-    // Resto dos campos do formulário
-    doencas_ginecologicas: [],
-    faz_acompanhamento_periodico: false,
-    suspeita_doenca: '',
-    doencas_repetitivas: '',
-    historico_familiar_ginecologico: [],
+
+    // Saúde
     idade_primeira_menstruacao: '',
     ciclo_menstrual_regular: false,
     duracao_ciclo_menstrual: '',
@@ -170,55 +196,63 @@ export function AvaliacaoNutricionalFeminina() {
     sintomas_tpm: [],
     sintoma_tpm_principal: '',
     tpm_afeta_alimentacao: '',
-    
-    // Histórico Gestacional
+    doencas_ginecologicas: [],
+    faz_acompanhamento_periodico: false,
+    suspeita_doenca: '',
+    doencas_repetitivas: '',
+    historico_familiar_ginecologico: [],
+
+    // Estilo de Vida e História Gestacional
     ja_engravidou: false,
     quantidade_gestacoes: 0,
     tipos_parto: [],
     teve_perda_gestacional: false,
     tentando_engravidar: false,
+    usa_contraceptivo: false,
     metodo_contraceptivo: '',
     tempo_uso_contraceptivo: '',
     libido: '',
-    
-    // Estilo de Vida
     nivel_estresse: 0,
     fumante: false,
-    consumo_alcool: false,
-    horas_sono: '',
+    consumo_alcool: '',
+    horas_sono: 0,
     qualidade_sono: '',
     pratica_exercicios: false,
+    frequencia_exercicios: '',
+    tipo_exercicios: '',
     detalhes_exercicios: '',
-    consumo_agua: '',
-    
-    // Hábitos Intestinais
+
+    // Hábitos Alimentares e Intestinais
     intestino_regular: false,
-    frequencia_intestinal: '',
+    frequencia_evacuacao: '',
     consistencia_fezes: '',
     tem_constipacao: false,
     tem_diarreia: false,
-    frequencia_evacuacao: '',
     dificuldade_evacuar: false,
     sangramento_evacuar: false,
     observacoes_intestinais: '',
-    
-    // Hábitos Alimentares
     intolerancia_alimentar: [],
     alimentos_essenciais: [],
     preferencia_sabor: '',
     aversao_alimentar: [],
     horario_mais_fome: '',
-    rotina_diaria: '',
-    rotina_alimentar: '',
-    diario_alimentar: '',
     numero_refeicoes: '',
     local_refeicoes: '',
     consumo_agua_litros: '',
     velocidade_comer: '',
     mastigacao: '',
     belisca_entre_refeicoes: false,
+    rotina_diaria: '',
+    rotina_alimentar: '',
+    diario_alimentar: '',
     alergias_alimentares: '',
-    preferencias_alimentares: ''
+    preferencias_alimentares: '',
+
+    // Adicionar campos que faltam
+    tem_doencas_ginecologicas: false,
+    tem_suspeita_doenca: false,
+    tem_historico_familiar: false,
+    tem_intolerancia: false,
   });
 
   // Aplica estilos de fundo consistentes com o dashboard
@@ -280,12 +314,31 @@ export function AvaliacaoNutricionalFeminina() {
             ...formData,
             ...avaliacao,
             // Garante que os campos de controle da interface estejam corretos
-            tem_doencas_ginecologicas: !!avaliacao.doencas_ginecologicas?.length,
-            tem_historico_familiar: !!avaliacao.historico_familiar_ginecologico?.length,
-            tem_suspeita_doenca: !!avaliacao.suspeita_doenca,
-            tem_doencas_repetitivas: !!avaliacao.doencas_repetitivas,
-            usa_contraceptivo: !!avaliacao.metodo_contraceptivo,
-            tem_intolerancia: !!avaliacao.intolerancia_alimentar?.length
+            doencas_ginecologicas: avaliacao.doencas_ginecologicas?.split(',') || [],
+            historico_familiar_ginecologico: avaliacao.historico_familiar_ginecologico?.split(',') || [],
+            suspeita_doenca: avaliacao.suspeita_doenca || '',
+            faz_acompanhamento_periodico: !!avaliacao.faz_acompanhamento_periodico,
+            doencas_repetitivas: avaliacao.doencas_repetitivas || '',
+            tem_constipacao: !!avaliacao.tem_constipacao,
+            tem_diarreia: !!avaliacao.tem_diarreia,
+            dificuldade_evacuar: !!avaliacao.dificuldade_evacuar,
+            sangramento_evacuar: !!avaliacao.sangramento_evacuar,
+            intolerancia_alimentar: avaliacao.intolerancia_alimentar?.split(',') || [],
+            alimentos_essenciais: avaliacao.alimentos_essenciais?.split(',') || [],
+            preferencia_sabor: avaliacao.preferencia_sabor || '',
+            aversao_alimentar: avaliacao.aversao_alimentar?.split(',') || [],
+            horario_mais_fome: avaliacao.horario_mais_fome || '',
+            numero_refeicoes: avaliacao.numero_refeicoes || '',
+            local_refeicoes: avaliacao.local_refeicoes || '',
+            consumo_agua_litros: avaliacao.consumo_agua_litros || '',
+            velocidade_comer: avaliacao.velocidade_comer || '',
+            mastigacao: avaliacao.mastigacao || '',
+            belisca_entre_refeicoes: !!avaliacao.belisca_entre_refeicoes,
+            rotina_diaria: avaliacao.rotina_diaria || '',
+            rotina_alimentar: avaliacao.rotina_alimentar || '',
+            diario_alimentar: avaliacao.diario_alimentar || '',
+            alergias_alimentares: avaliacao.alergias_alimentares || '',
+            preferencias_alimentares: avaliacao.preferencias_alimentares || ''
           });
         } else {
           // Se não estiver em modo de visualização e já existe avaliação, redireciona
@@ -317,7 +370,6 @@ export function AvaliacaoNutricionalFeminina() {
         [name]: checkbox.checked
       }));
     } else if (type === 'radio') {
-      // Tratamento específico para botões de rádio
       const boolValue = value === 'true';
       
       setFormData(prev => {
@@ -333,21 +385,15 @@ export function AvaliacaoNutricionalFeminina() {
         if (name === 'tem_doencas_ginecologicas' && !boolValue) {
           newState.doencas_ginecologicas = [];
         }
-        if (name === 'tem_historico_familiar' && !boolValue) {
-          newState.historico_familiar_ginecologico = [];
-        }
         if (name === 'tem_suspeita_doenca' && !boolValue) {
           newState.suspeita_doenca = '';
         }
-        if (name === 'tem_doencas_repetitivas' && !boolValue) {
-          newState.doencas_repetitivas = '';
+        if (name === 'tem_historico_familiar' && !boolValue) {
+          newState.historico_familiar_ginecologico = [];
         }
         if (name === 'usa_contraceptivo' && !boolValue) {
           newState.metodo_contraceptivo = '';
           newState.tempo_uso_contraceptivo = '';
-        }
-        if (name === 'tem_intolerancia' && !boolValue) {
-          newState.intolerancia_alimentar = [];
         }
         if (name === 'ja_engravidou' && !boolValue) {
           newState.quantidade_gestacoes = 0;
@@ -394,65 +440,97 @@ export function AvaliacaoNutricionalFeminina() {
 
   // Função para validar cada etapa
   const validateStep = (step: number): boolean => {
-    const errors: Record<string, string> = {};
-    
-    if (step === 1) {
-      // Validação da etapa 1 - Dados Pessoais e Medidas
-      if (!formData.data_nascimento) errors.data_nascimento = "Data de nascimento é obrigatória";
-      if (!formData.estado_civil) errors.estado_civil = "Estado civil é obrigatório";
-      if (!formData.peso) errors.peso = "Peso é obrigatório";
-      if (!formData.altura) errors.altura = "Altura é obrigatória";
-      if (!formData.peso_habitual) errors.peso_habitual = "Peso habitual é obrigatório";
-      if (!formData.percepcao_corporal) errors.percepcao_corporal = "Percepção corporal é obrigatória";
-      if (!formData.objetivo) errors.objetivo = "Objetivo é obrigatório";
-    } 
-    else if (step === 2) {
-      // Validação da etapa 2 - Saúde Ginecológica
-      if (!formData.idade_primeira_menstruacao) errors.idade_primeira_menstruacao = "Idade da primeira menstruação é obrigatória";
-      if (!formData.duracao_ciclo_menstrual) errors.duracao_ciclo_menstrual = "Duração do ciclo menstrual é obrigatória";
-      if (!formData.sintoma_tpm_principal) errors.sintoma_tpm_principal = "Sintoma principal de TPM é obrigatório";
-      if (!formData.tpm_afeta_alimentacao) errors.tpm_afeta_alimentacao = "Este campo é obrigatório";
-      if (formData.tem_doencas_ginecologicas && formData.doencas_ginecologicas.length === 0) {
-        errors.doencas_ginecologicas = "Por favor, especifique as doenças ginecológicas";
-      }
-      if (formData.tem_historico_familiar && formData.historico_familiar_ginecologico.length === 0) {
-        errors.historico_familiar_ginecologico = "Por favor, especifique o histórico familiar";
-      }
-      if (formData.tem_suspeita_doenca && !formData.suspeita_doenca) {
-        errors.suspeita_doenca = "Por favor, especifique a suspeita de doença";
-      }
-    }
-    else if (step === 3) {
-      // Validação da etapa 3 - Estilo de Vida e Histórico Gestacional
-      if (!formData.horas_sono) errors.horas_sono = "Horas de sono é obrigatório";
-      if (!formData.qualidade_sono) errors.qualidade_sono = "Qualidade do sono é obrigatória";
-      if (formData.pratica_exercicios && !formData.detalhes_exercicios) {
-        errors.detalhes_exercicios = "Por favor, especifique os detalhes dos exercícios";
-      }
-      if (formData.ja_engravidou && formData.quantidade_gestacoes <= 0) {
-        errors.quantidade_gestacoes = "Por favor, informe o número de gestações";
-      }
-      if (formData.usa_contraceptivo) {
-        if (!formData.metodo_contraceptivo) errors.metodo_contraceptivo = "Método contraceptivo é obrigatório";
-        if (!formData.tempo_uso_contraceptivo) errors.tempo_uso_contraceptivo = "Tempo de uso é obrigatório";
-      }
-      if (!formData.libido) errors.libido = "Informação sobre libido é obrigatória";
-    }
-    else if (step === 4) {
-      // Validação da etapa 4 - Hábitos Intestinais e Alimentares
-      if (!formData.frequencia_evacuacao) errors.frequencia_evacuacao = "Frequência de evacuação é obrigatória";
-      if (!formData.consistencia_fezes) errors.consistencia_fezes = "Consistência das fezes é obrigatória";
-      if (!formData.numero_refeicoes) errors.numero_refeicoes = "Número de refeições é obrigatório";
-      if (!formData.consumo_agua_litros) errors.consumo_agua_litros = "Consumo de água é obrigatório";
-      if (!formData.velocidade_comer) errors.velocidade_comer = "Velocidade ao comer é obrigatória";
-      if (!formData.mastigacao) errors.mastigacao = "Informação sobre mastigação é obrigatória";
-      if (formData.tem_intolerancia && formData.intolerancia_alimentar.length === 0) {
-        errors.intolerancia_alimentar = "Por favor, especifique as intolerâncias";
-      }
-    }
-    
+    const errors = validateForm(step);
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // Função para validar o formulário
+  const validateForm = (step: number): FormErrors => {
+    const errors: FormErrors = {};
+
+    switch (step) {
+      case 1:
+        // Validação dos dados pessoais
+        if (!formData.data_nascimento) {
+          errors.data_nascimento = "Data de nascimento é obrigatória";
+        }
+        if (!formData.estado_civil) {
+          errors.estado_civil = "Estado civil é obrigatório";
+        }
+        if (!formData.objetivo) {
+          errors.objetivo = "Objetivo é obrigatório";
+        }
+        if (!formData.peso) {
+          errors.peso = "Peso é obrigatório";
+        }
+        if (!formData.altura) {
+          errors.altura = "Altura é obrigatória";
+        }
+        if (!formData.peso_habitual) {
+          errors.peso_habitual = "Peso habitual é obrigatório";
+        }
+        if (formData.tem_filhos && !formData.quantidade_filhos) {
+          errors.quantidade_filhos = "Quantidade de filhos é obrigatória";
+        }
+        if (!formData.percepcao_corporal) {
+          errors.percepcao_corporal = "Este campo é obrigatório";
+        }
+        break;
+
+      case 2:
+        // Validação dos dados de saúde
+        if (!formData.idade_primeira_menstruacao) {
+          errors.idade_primeira_menstruacao = "Idade da primeira menstruação é obrigatória";
+        }
+        if (!formData.duracao_ciclo_menstrual) {
+          errors.duracao_ciclo_menstrual = "Duração do ciclo menstrual é obrigatória";
+        }
+        if (!formData.sintoma_tpm_principal) {
+          errors.sintoma_tpm_principal = "Sintoma principal de TPM é obrigatório";
+        }
+        if (!formData.tpm_afeta_alimentacao) {
+          errors.tpm_afeta_alimentacao = "Este campo é obrigatório";
+        }
+        if (formData.doencas_ginecologicas.length > 0 && !formData.doencas_ginecologicas.some(doenca => doenca.trim())) {
+          errors.doencas_ginecologicas = "Por favor, especifique as doenças ginecológicas";
+        }
+        break;
+
+      case 3:
+        // Validação do estilo de vida
+        if (formData.ja_engravidou && !formData.quantidade_gestacoes) {
+          errors.quantidade_gestacoes = "Número de gestações é obrigatório";
+        }
+        if (!formData.horas_sono) {
+          errors.horas_sono = "Horas de sono é obrigatório";
+        }
+        if (!formData.qualidade_sono) {
+          errors.qualidade_sono = "Qualidade do sono é obrigatória";
+        }
+        if (formData.pratica_exercicios && !formData.detalhes_exercicios) {
+          errors.detalhes_exercicios = "Detalhes dos exercícios são obrigatórios";
+        }
+        break;
+
+      case 4:
+        // Validação dos hábitos alimentares
+        if (!formData.numero_refeicoes) {
+          errors.numero_refeicoes = "Número de refeições é obrigatório";
+        }
+        if (!formData.consumo_agua_litros) {
+          errors.consumo_agua_litros = "Consumo de água é obrigatório";
+        }
+        if (!formData.velocidade_comer) {
+          errors.velocidade_comer = "Velocidade ao comer é obrigatória";
+        }
+        if (!formData.mastigacao) {
+          errors.mastigacao = "Mastigação é obrigatória";
+        }
+        break;
+    }
+
+    return errors;
   };
 
   // Função para avançar etapa
@@ -499,106 +577,27 @@ export function AvaliacaoNutricionalFeminina() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuário não autenticado');
 
-      console.log('Iniciando salvamento do formulário...');
+      const idade = calcularIdade(formData.data_nascimento);
 
-      // Remove campos de controle da interface
-      const {
-        tem_doencas_ginecologicas,
-        tem_historico_familiar,
-        tem_suspeita_doenca,
-        usa_contraceptivo,
-        tem_intolerancia,
-        tem_doencas_repetitivas,
-        ...dadosLimpos
-      } = formData;
-
-      // Trata campos numéricos e outros tipos conforme o schema
-      const dadosTratados = {
+      const dadosAvaliacao = {
+        ...formData,
         user_id: user.id,
-        nome: perfilData?.nome || null, // Usa o nome do perfil do cliente
-        data_nascimento: dadosLimpos.data_nascimento,
-        idade: calcularIdade(formData.data_nascimento),
-        estado_civil: dadosLimpos.estado_civil || null,
-        tem_filhos: dadosLimpos.tem_filhos,
-        quantidade_filhos: Number(dadosLimpos.quantidade_filhos) || 0,
-        objetivo: dadosLimpos.objetivo,
-        peso: Number(dadosLimpos.peso) || 0,
-        altura: Number(dadosLimpos.altura) || 0,
-        peso_habitual: dadosLimpos.peso_habitual ? Number(dadosLimpos.peso_habitual) : null,
-        perda_peso_recente: dadosLimpos.perda_peso_recente || null,
-        ganho_peso_recente: dadosLimpos.ganho_peso_recente || null,
-        percepcao_corporal: dadosLimpos.percepcao_corporal || null,
-        doencas_ginecologicas: dadosLimpos.doencas_ginecologicas || [],
-        faz_acompanhamento_periodico: dadosLimpos.faz_acompanhamento_periodico || false,
-        suspeita_doenca: dadosLimpos.suspeita_doenca || null,
-        doencas_repetitivas: dadosLimpos.doencas_repetitivas || null,
-        historico_familiar_ginecologico: dadosLimpos.historico_familiar_ginecologico || [],
-        idade_primeira_menstruacao: dadosLimpos.idade_primeira_menstruacao ? Number(dadosLimpos.idade_primeira_menstruacao) : null,
-        ciclo_menstrual_regular: dadosLimpos.ciclo_menstrual_regular || false,
-        duracao_ciclo_menstrual: dadosLimpos.duracao_ciclo_menstrual || null,
-        monitora_ciclo: dadosLimpos.monitora_ciclo || false,
-        sintomas_tpm: dadosLimpos.sintomas_tpm || [],
-        sintoma_tpm_principal: dadosLimpos.sintoma_tpm_principal || null,
-        tpm_afeta_alimentacao: dadosLimpos.tpm_afeta_alimentacao || null,
-        ja_engravidou: dadosLimpos.ja_engravidou || false,
-        quantidade_gestacoes: Number(dadosLimpos.quantidade_gestacoes) || 0,
-        tipos_parto: dadosLimpos.tipos_parto || [],
-        teve_perda_gestacional: dadosLimpos.teve_perda_gestacional || false,
-        tentando_engravidar: dadosLimpos.tentando_engravidar || false,
-        metodo_contraceptivo: dadosLimpos.metodo_contraceptivo || null,
-        tempo_uso_contraceptivo: dadosLimpos.tempo_uso_contraceptivo || null,
-        libido: dadosLimpos.libido || null,
-        nivel_estresse: Number(dadosLimpos.nivel_estresse) || 0,
-        fumante: dadosLimpos.fumante || false,
-        consumo_alcool: dadosLimpos.consumo_alcool || false,
-        horas_sono: dadosLimpos.horas_sono ? Number(dadosLimpos.horas_sono) : null,
-        qualidade_sono: dadosLimpos.qualidade_sono || null,
-        pratica_exercicios: dadosLimpos.pratica_exercicios || false,
-        detalhes_exercicios: dadosLimpos.detalhes_exercicios || null,
-        consumo_agua: dadosLimpos.consumo_agua ? Number(dadosLimpos.consumo_agua) : null,
-        intestino_regular: dadosLimpos.intestino_regular || false,
-        frequencia_intestinal: dadosLimpos.frequencia_intestinal || null,
-        consistencia_fezes: dadosLimpos.consistencia_fezes || null,
-        tem_constipacao: dadosLimpos.tem_constipacao || false,
-        tem_diarreia: dadosLimpos.tem_diarreia || false,
-        dificuldade_evacuar: dadosLimpos.dificuldade_evacuar || false,
-        sangramento_evacuar: dadosLimpos.sangramento_evacuar || false,
-        observacoes_intestinais: dadosLimpos.observacoes_intestinais || null,
-        intolerancia_alimentar: dadosLimpos.intolerancia_alimentar || [],
-        alimentos_essenciais: dadosLimpos.alimentos_essenciais || [],
-        preferencia_sabor: dadosLimpos.preferencia_sabor || null,
-        aversao_alimentar: dadosLimpos.aversao_alimentar || [],
-        horario_mais_fome: dadosLimpos.horario_mais_fome || null,
-        rotina_diaria: dadosLimpos.rotina_diaria || null,
-        rotina_alimentar: dadosLimpos.rotina_alimentar || null,
-        diario_alimentar: dadosLimpos.diario_alimentar || null,
-        numero_refeicoes: dadosLimpos.numero_refeicoes || '',
-        local_refeicoes: dadosLimpos.local_refeicoes || '',
-        consumo_agua_litros: dadosLimpos.consumo_agua_litros || '',
-        velocidade_comer: dadosLimpos.velocidade_comer || '',
-        mastigacao: dadosLimpos.mastigacao || '',
-        belisca_entre_refeicoes: dadosLimpos.belisca_entre_refeicoes || false,
-        alergias_alimentares: dadosLimpos.alergias_alimentares || '',
-        preferencias_alimentares: dadosLimpos.preferencias_alimentares || '',
+        idade,
         status: 'PENDENTE',
         ultima_atualizacao: new Date().toISOString()
       };
 
-      console.log('Dados a serem enviados:', dadosTratados);
-
       const { error: avaliacaoError } = await supabase
         .from('avaliacao_nutricional_feminino')
-        .insert([dadosTratados]);
+        .insert([dadosAvaliacao]);
 
       if (avaliacaoError) {
         console.error('Erro ao salvar avaliação:', avaliacaoError);
         throw avaliacaoError;
       }
 
-      console.log('Avaliação nutricional salva com sucesso');
       setSucesso(true);
       
-      // Aguarda 2 segundos antes de redirecionar
       setTimeout(() => {
         navigate('/dashboard');
       }, 2000);
@@ -627,947 +626,754 @@ export function AvaliacaoNutricionalFeminina() {
 
   return (
     <Layout>
-      <div className={`min-h-screen py-12 px-4 sm:px-6 lg:px-8 ${theme.background}`}>
-        <div className="max-w-4xl mx-auto">
-          <div className={`${theme.card} rounded-2xl p-8 relative overflow-hidden`}>
-            {/* Elementos decorativos */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl -z-10" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 rounded-full blur-3xl -z-10" />
-            
-            {/* Cabeçalho */}
-            <div className="flex items-center justify-between mb-8">
+      <div className={`min-h-screen ${themeClasses.background} px-4 py-8`}>
+        <div className="max-w-7xl mx-auto">
+          {sucesso ? (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fadeIn">
+              <div className={`${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'} rounded-full p-6 mb-6`}>
+                <CheckCircle className={`h-16 w-16 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} />
+              </div>
+              <h2 className={`text-2xl md:text-3xl font-bold mb-4 text-center ${themeClasses.text}`}>
+                Avaliação Nutricional Enviada com Sucesso!
+              </h2>
+              <p className={`${themeClasses.textSecondary} text-center max-w-md mb-8 text-lg`}>
+                Sua avaliação foi recebida e está sendo analisada por nossos especialistas. 
+                Em breve você receberá seu plano nutricional personalizado.
+              </p>
               <button
-                type="button"
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center text-slate-600 hover:text-blue-600 transition-colors group"
+                className={`${themeClasses.button} px-6 py-3 rounded-lg font-semibold`}
               >
-                <ArrowLeft className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-                <span>Voltar ao Dashboard</span>
+                Voltar para o Dashboard
               </button>
             </div>
-
-            {/* Título e descrição */}
-            <div className="flex flex-col items-center mb-12">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-50"></div>
-                <div className="relative bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-full mb-6 shadow-xl">
-                  <ClipboardCheck className="h-12 w-12 text-white" />
-                </div>
-              </div>
-              <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
-                Avaliação Nutricional Feminina
-              </h2>
-              <p className={`${theme.textSecondary} text-center text-lg max-w-xl`}>
-                Preencha o formulário para personalizar seu plano nutricional
-              </p>
-            </div>
-{/* Indicador de progresso */}
-            <div className="mb-12">
-              <div className="flex justify-between items-center mb-4">
-                {Array.from({ length: totalSteps }).map((_, index) => (
-                  <div key={index} className="flex flex-col items-center relative">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      currentStep > index + 1 ? theme.stepIndicator.completed : 
-                      currentStep === index + 1 ? theme.stepIndicator.active : theme.stepIndicator.inactive
-                    }`}>
-                      {currentStep > index + 1 ? (
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <span className="text-white font-semibold">{index + 1}</span>
-                      )}
-                    </div>
-                    <span className={`mt-2 text-sm font-medium ${
-                      currentStep === index + 1 ? 'text-blue-600' : 'text-slate-500'
-                    }`}>
-                      {index === 0 ? 'Dados Pessoais' : 
-                       index === 1 ? 'Saúde Ginecológica' :
-                       index === 2 ? 'Estilo de Vida' : 'Hábitos Alimentares'}
-                    </span>
-                    {index < totalSteps - 1 && (
-                      <div className="absolute top-6 left-full w-full h-[2px]">
-                        <div className={`h-full ${theme.progressBar.track}`}></div>
-                        <div 
-                          className={`absolute top-0 left-0 h-full transition-all duration-300 ${theme.progressBar.fill}`}
-                          style={{ 
-                            width: currentStep > index + 1 ? '100%' : 
-                                  currentStep === index + 1 ? '50%' : '0%' 
-                          }}
-                        ></div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Formulário */}
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Mensagem de sucesso */}
-              {sucesso && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-6" role="alert">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    <span className="block sm:inline">Formulário enviado com sucesso! Sua avaliação nutricional foi registrada.</span>
+          ) : (
+            <>
+              <div className="mb-12 flex flex-col items-center justify-center text-center">
+                <div className="flex flex-col items-center mb-8">
+                  <div className="text-center">
+                    <TrueFocus 
+                      sentence="Avaliação Nutricional"
+                      manualMode={false}
+                      blurAmount={5}
+                      borderColor="orange"
+                      animationDuration={2}
+                      pauseBetweenAnimations={1}
+                    />
                   </div>
                 </div>
-              )}
-              
-              {/* Mensagem de erro */}
+                
+                {/* Botão de alternância de tema */}
+                <button 
+                  onClick={toggleTheme}
+                  className={`p-2 rounded-lg transition-all duration-300 ease-in-out
+                            hover:scale-110 active:scale-95
+                            ${isDarkMode 
+                              ? 'bg-gray-800 text-orange-400 hover:bg-gray-700' 
+                              : 'bg-white text-orange-500 hover:bg-gray-50'}
+                            shadow-md hover:shadow-lg
+                            border ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}
+                  aria-label={isDarkMode ? "Ativar modo claro" : "Ativar modo escuro"}
+                >
+                  {isDarkMode ? (
+                    <Sun className="h-5 w-5" />
+                  ) : (
+                    <Moon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+
               {erro && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
                   <div className="flex items-center">
-                    <AlertCircle className="h-5 w-5 mr-2" />
+                    <AlertCircle className="h-5 w-5 mr-2 text-red-500" />
                     <span className="block sm:inline">{erro}</span>
                   </div>
                 </div>
               )}
-              
-              {/* Mensagem de confirmação do Step 4 */}
-              {showConfirmationMessage && (
-                <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-6" role="alert">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 mr-2" />
-                    <span className="block sm:inline">Informações confirmadas! Clique em "Enviar Formulário" para finalizar.</span>
+
+              {/* Progress Steps */}
+              <div className="flex justify-center space-x-4 md:space-x-8 mb-8">
+                {[1, 2, 3, 4].map((step) => (
+                  <div key={step} className="flex flex-col items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 
+                      ${currentStep === step ? themeClasses.stepIndicator.active : 
+                        currentStep > step ? themeClasses.stepIndicator.completed : 
+                        themeClasses.stepIndicator.inactive}`}>
+                      {currentStep > step ? '✓' : step}
+                    </div>
+                    <span className={`text-sm ${
+                      isDarkMode 
+                        ? (currentStep >= step ? 'text-gray-200' : 'text-gray-400')
+                        : (currentStep >= step ? 'text-gray-800' : 'text-gray-600')
+                    }`}>
+                      {step === 1 ? 'Dados Pessoais' :
+                       step === 2 ? 'Saúde' :
+                       step === 3 ? 'Estilo de Vida' :
+                       'Hábitos Alimentares'}
+                    </span>
                   </div>
-                </div>
-              )}
-              
-              {/* Indicador de carregamento */}
-              {loading && (
-                <div className="flex justify-center items-center mb-6">
-                  <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
-                  <span className="ml-2 text-blue-600">Processando...</span>
-                </div>
-              )}
-{/* Etapa 1 - Dados Pessoais e Medidas */}
-              {currentStep === 1 && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <label htmlFor="data_nascimento" className="block text-sm font-medium text-slate-700">
-                        Data de Nascimento*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Ex: 15/05/1985
-                      </p>
-                      <input
-                        type="date"
-                        id="data_nascimento"
-                        name="data_nascimento"
-                        value={formData.data_nascimento}
-                        onChange={handleChange}
-                        className={`${theme.input} w-full rounded-lg py-3 px-4 ${formErrors.data_nascimento ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      {formErrors.data_nascimento && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.data_nascimento}</p>
-                      )}
-                    </div>
+                ))}
+              </div>
 
-                    <div className="space-y-4">
-                      <label htmlFor="estado_civil" className="block text-sm font-medium text-slate-700">
-                        Estado Civil*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Ex: Solteira, Casada, Divorciada
-                      </p>
-                      <select
-                        id="estado_civil"
-                        name="estado_civil"
-                        value={formData.estado_civil}
-                        onChange={handleChange}
-                        className={`${theme.input} w-full rounded-lg py-3 px-4 ${formErrors.estado_civil ? 'border-red-500' : ''}`}
-                        required
-                      >
-                        <option value="">Selecione</option>
-                        <option value="Solteira">Solteira</option>
-                        <option value="Casada">Casada</option>
-                        <option value="Divorciada">Divorciada</option>
-                        <option value="Viúva">Viúva</option>
-                        <option value="União Estável">União Estável</option>
-                      </select>
-                      {formErrors.estado_civil && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.estado_civil}</p>
-                      )}
+              {/* Form Section */}
+              <div className={themeClasses.formSection}>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  {loading && (
+                    <div className="flex justify-center items-center mb-6">
+                      <Loader2 className="h-8 w-8 text-orange-600 animate-spin" />
+                      <span className="ml-2 text-orange-600">Processando...</span>
                     </div>
+                  )}
 
-                    <div className="space-y-4">
-                      <label className="block text-sm font-medium text-slate-700">
-                        Possui filhos?*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Selecione sim ou não
-                      </p>
-                      <div className="flex gap-4">
-                        <label className="inline-flex items-center cursor-pointer">
+                  {/* Manter o conteúdo existente dos steps aqui */}
+                  {/* ... existing steps content ... */}
+
+                  {/* Step 1: Dados Pessoais */}
+                  {currentStep === 1 && (
+                    <div className={themeClasses.card}>
+                      <h3 className={`${themeClasses.cardTitle} mb-6`}>
+                        Dados Pessoais
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="form-group">
+                          <label htmlFor="data_nascimento" className={themeClasses.label}>
+                            Data de Nascimento
+                            <span className="text-sm text-gray-500 ml-2">(Ex: 15/05/1985)</span>
+                          </label>
                           <input
-                            type="radio"
-                            name="tem_filhos"
-                            value="true"
-                            checked={formData.tem_filhos === true}
+                            type="date"
+                            id="data_nascimento"
+                            name="data_nascimento"
+                            value={formData.data_nascimento}
                             onChange={handleChange}
-                            className="form-radio text-blue-600"
+                            className={themeClasses.input}
+                            required
+                            placeholder="15/05/1985"
                           />
-                          <span className="ml-2 text-slate-700">Sim</span>
-                        </label>
-                        <label className="inline-flex items-center cursor-pointer">
-                          <input
-                            type="radio"
-                            name="tem_filhos"
-                            value="false"
-                            checked={formData.tem_filhos === false}
+                          {formErrors.data_nascimento && (
+                            <p className={themeClasses.errorText}>{formErrors.data_nascimento}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="estado_civil" className={themeClasses.label}>
+                            Estado Civil
+                            <span className="text-sm text-gray-500 ml-2">(Selecione sua situação atual)</span>
+                          </label>
+                          <select
+                            id="estado_civil"
+                            name="estado_civil"
+                            value={formData.estado_civil}
                             onChange={handleChange}
-                            className="form-radio text-blue-600"
-                          />
-                          <span className="ml-2 text-slate-700">Não</span>
-                        </label>
-                      </div>
-                      {formData.tem_filhos && (
-                        <div className="mt-4">
-                          <label htmlFor="quantidade_filhos" className="block text-sm font-medium text-slate-700">
-                            Quantidade de Filhos
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione seu estado civil</option>
+                            <option value="solteira">Solteira</option>
+                            <option value="casada">Casada</option>
+                            <option value="divorciada">Divorciada</option>
+                            <option value="viuva">Viúva</option>
+                            <option value="uniao_estavel">União Estável</option>
+                          </select>
+                          {formErrors.estado_civil && (
+                            <p className={themeClasses.errorText}>{formErrors.estado_civil}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>Tem filhos?</label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_filhos"
+                                checked={formData.tem_filhos === true}
+                                onChange={() => setFormData({...formData, tem_filhos: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_filhos"
+                                checked={formData.tem_filhos === false}
+                                onChange={() => setFormData({...formData, tem_filhos: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {formData.tem_filhos && (
+                          <div className="form-group">
+                            <label htmlFor="quantidade_filhos" className={themeClasses.label}>
+                              Quantos filhos?
+                            </label>
+                            <input
+                              type="number"
+                              id="quantidade_filhos"
+                              name="quantidade_filhos"
+                              value={formData.quantidade_filhos}
+                              onChange={handleChange}
+                              min="1"
+                              className={themeClasses.input}
+                              required={formData.tem_filhos}
+                              placeholder="Ex: 2"
+                            />
+                          </div>
+                        )}
+
+                        <div className="form-group md:col-span-2">
+                          <label htmlFor="objetivo" className={themeClasses.label}>
+                            Objetivo Principal
+                            <span className="text-sm text-gray-500 ml-2">(Selecione seu principal objetivo com o acompanhamento)</span>
+                          </label>
+                          <select
+                            id="objetivo"
+                            name="objetivo"
+                            value={formData.objetivo}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione seu objetivo</option>
+                            <option value="PERDER_PESO">Perder Peso</option>
+                            <option value="GANHAR_MASSA">Ganhar Massa Muscular</option>
+                          </select>
+                          {formErrors.objetivo && (
+                            <p className={themeClasses.errorText}>{formErrors.objetivo}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="peso" className={themeClasses.label}>
+                            Peso Atual (kg)
+                            <span className="text-sm text-gray-500 ml-2">(Ex: 65.5)</span>
                           </label>
                           <input
                             type="number"
-                            id="quantidade_filhos"
-                            name="quantidade_filhos"
-                            value={formData.quantidade_filhos}
+                            id="peso"
+                            name="peso"
+                            value={formData.peso}
                             onChange={handleChange}
-                            className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                            min="0"
+                            step="0.1"
+                            min="30"
+                            max="200"
+                            className={themeClasses.input}
+                            required
+                            placeholder="65.5"
+                          />
+                          {formErrors.peso && (
+                            <p className={themeClasses.errorText}>{formErrors.peso}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="altura" className={themeClasses.label}>
+                            Altura (cm)
+                            <span className="text-sm text-gray-500 ml-2">(Ex: 1.65)</span>
+                          </label>
+                          <input
+                            type="number"
+                            id="altura"
+                            name="altura"
+                            value={formData.altura}
+                            onChange={handleChange}
+                            min="100"
+                            max="220"
+                            className={themeClasses.input}
+                            required
+                            placeholder="1.65"
+                          />
+                          {formErrors.altura && (
+                            <p className={themeClasses.errorText}>{formErrors.altura}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="peso_habitual" className={themeClasses.label}>
+                            Peso Habitual (kg)
+                            <span className="text-sm text-gray-500 ml-2">(Ex: 72.0 - seu peso normal/usual)</span>
+                          </label>
+                          <input
+                            type="number"
+                            id="peso_habitual"
+                            name="peso_habitual"
+                            value={formData.peso_habitual}
+                            onChange={handleChange}
+                            step="0.1"
+                            min="30"
+                            max="200"
+                            className={themeClasses.input}
+                            required
+                            placeholder="72.0"
                           />
                         </div>
-                      )}
-                    </div>
 
-                    <div className="space-y-4">
-                      <label htmlFor="peso" className="block text-sm font-medium text-slate-700">
-                        Peso Atual (kg)*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Ex: 65.5
-                      </p>
-                      <input
-                        type="number"
-                        id="peso"
-                        name="peso"
-                        step="0.01"
-                        value={formData.peso}
-                        onChange={handleChange}
-                        className={`${theme.input} w-full rounded-lg py-3 px-4 ${formErrors.peso ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      {formErrors.peso && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.peso}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      <label htmlFor="altura" className="block text-sm font-medium text-slate-700">
-                        Altura (m)*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Ex: 1.65
-                      </p>
-                      <input
-                        type="number"
-                        id="altura"
-                        name="altura"
-                        step="0.01"
-                        value={formData.altura}
-                        onChange={handleChange}
-                        className={`${theme.input} w-full rounded-lg py-3 px-4 ${formErrors.altura ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      {formErrors.altura && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.altura}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      <label htmlFor="peso_habitual" className="block text-sm font-medium text-slate-700">
-                        Peso Habitual (kg)*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Ex: 63.0 (seu peso normal/usual)
-                      </p>
-                      <input
-                        type="number"
-                        id="peso_habitual"
-                        name="peso_habitual"
-                        step="0.01"
-                        value={formData.peso_habitual}
-                        onChange={handleChange}
-                        className={`${theme.input} w-full rounded-lg py-3 px-4 ${formErrors.peso_habitual ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      {formErrors.peso_habitual && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.peso_habitual}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      <label htmlFor="perda_peso_recente" className="block text-sm font-medium text-slate-700">
-                        Perda de peso recente?
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Quanto e em quanto tempo
-                      </p>
-                      <input
-                        type="text"
-                        id="perda_peso_recente"
-                        name="perda_peso_recente"
-                        value={formData.perda_peso_recente}
-                        onChange={handleChange}
-                        placeholder="Ex: 5kg em 3 meses"
-                        className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                      />
-                    </div>
-
-                    <div className="space-y-4">
-                      <label htmlFor="ganho_peso_recente" className="block text-sm font-medium text-slate-700">
-                        Ganho de peso recente?
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Quanto e em quanto tempo
-                      </p>
-                      <input
-                        type="text"
-                        id="ganho_peso_recente"
-                        name="ganho_peso_recente"
-                        value={formData.ganho_peso_recente}
-                        onChange={handleChange}
-                        placeholder="Ex: 3kg em 2 meses"
-                        className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                      />
-                    </div>
-
-                    <div className="md:col-span-2 space-y-4">
-                      <label htmlFor="percepcao_corporal" className="block text-sm font-medium text-slate-700">
-                        Percepção Corporal*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Como você se sente em relação ao seu corpo atualmente?
-                      </p>
-                      <textarea
-                        id="percepcao_corporal"
-                        name="percepcao_corporal"
-                        value={formData.percepcao_corporal}
-                        onChange={handleChange}
-                        rows={3}
-                        className={`${theme.input} w-full rounded-lg py-3 px-4 ${formErrors.percepcao_corporal ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      {formErrors.percepcao_corporal && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.percepcao_corporal}</p>
-                      )}
-                    </div>
-
-                    <div className="md:col-span-2 space-y-4">
-                      <label htmlFor="objetivo" className="block text-sm font-medium text-slate-700">
-                        Objetivo*
-                      </label>
-                      <p className="text-sm text-slate-500 mb-2">
-                        Qual seu objetivo principal com a consulta nutricional?
-                      </p>
-                      <textarea
-                        id="objetivo"
-                        name="objetivo"
-                        value={formData.objetivo}
-                        onChange={handleChange}
-                        rows={3}
-                        placeholder="Ex: Perda de peso, ganho de massa muscular, melhora da saúde em geral..."
-                        className={`${theme.input} w-full rounded-lg py-3 px-4 ${formErrors.objetivo ? 'border-red-500' : ''}`}
-                        required
-                      />
-                      {formErrors.objetivo && (
-                        <p className="text-red-500 text-sm mt-1">{formErrors.objetivo}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end mt-8">
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      className={`${theme.button} px-6 py-2 rounded-lg`}
-                    >
-                      Próximo
-                    </button>
-                  </div>
-                </div>
-              )}
-{/* Etapa 2 - Saúde Ginecológica */}
-              {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-purple-100">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Doenças Ginecológicas */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Possui doenças ginecológicas?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Ex: endometriose, SOP, miomas
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_doencas_ginecologicas"
-                              value="true"
-                              checked={formData.tem_doencas_ginecologicas === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label htmlFor="variacao_peso" className={themeClasses.label}>
+                            Variação de Peso nos Últimos 6 Meses
+                            <span className="text-sm text-gray-500 ml-2">(Ex: Ganhou 5kg ou Perdeu 3kg)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_doencas_ginecologicas"
-                              value="false"
-                              checked={formData.tem_doencas_ginecologicas === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="perda_peso_recente" className="text-sm text-gray-600">Perdeu (kg)</label>
+                              <input
+                                type="number"
+                                id="perda_peso_recente"
+                                name="perda_peso_recente"
+                                value={formData.perda_peso_recente}
+                                onChange={handleChange}
+                                step="0.1"
+                                min="0"
+                                className={themeClasses.input}
+                                placeholder="0.0"
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="ganho_peso_recente" className="text-sm text-gray-600">Ganhou (kg)</label>
+                              <input
+                                type="number"
+                                id="ganho_peso_recente"
+                                name="ganho_peso_recente"
+                                value={formData.ganho_peso_recente}
+                                onChange={handleChange}
+                                step="0.1"
+                                min="0"
+                                className={themeClasses.input}
+                                placeholder="0.0"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="percepcao_corporal" className={themeClasses.label}>
+                            Como você se sente em relação ao seu corpo?
+                            <span className="text-sm text-gray-500 ml-2">(Selecione a opção que melhor representa)</span>
                           </label>
+                          <select
+                            id="percepcao_corporal"
+                            name="percepcao_corporal"
+                            value={formData.percepcao_corporal}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione como se sente</option>
+                            <option value="muito_satisfeita">Muito satisfeita</option>
+                            <option value="satisfeita">Satisfeita</option>
+                            <option value="neutra">Neutra</option>
+                            <option value="insatisfeita">Insatisfeita</option>
+                            <option value="muito_insatisfeita">Muito insatisfeita</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2: Saúde */}
+                  {currentStep === 2 && (
+                    <div className={themeClasses.card}>
+                      <h3 className={`${themeClasses.cardTitle} mb-6`}>
+                        Saúde
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 gap-6">
+                        {/* Ciclo Menstrual */}
+                        <div className="form-group">
+                          <label htmlFor="idade_primeira_menstruacao" className={themeClasses.label}>
+                            Idade da primeira menstruação
+                            <span className="text-sm text-gray-500 ml-2">(Ex: 12 anos)</span>
+                          </label>
+                          <input
+                            type="number"
+                            id="idade_primeira_menstruacao"
+                            name="idade_primeira_menstruacao"
+                            value={formData.idade_primeira_menstruacao}
+                            onChange={handleChange}
+                            min="8"
+                            max="18"
+                            className={themeClasses.input}
+                            required
+                            placeholder="12"
+                          />
+                          {formErrors.idade_primeira_menstruacao && (
+                            <p className={themeClasses.errorText}>{formErrors.idade_primeira_menstruacao}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Seu ciclo menstrual é regular?
+                            <span className="text-sm text-gray-500 ml-2">(Ocorre em intervalos previsíveis)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="ciclo_menstrual_regular"
+                                checked={formData.ciclo_menstrual_regular === true}
+                                onChange={() => setFormData({...formData, ciclo_menstrual_regular: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="ciclo_menstrual_regular"
+                                checked={formData.ciclo_menstrual_regular === false}
+                                onChange={() => setFormData({...formData, ciclo_menstrual_regular: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="duracao_ciclo_menstrual" className={themeClasses.label}>
+                            Duração média do seu ciclo menstrual (em dias)
+                            <span className="text-sm text-gray-500 ml-2">(Ex: 5 dias - do primeiro dia de uma menstruação até o primeiro dia da próxima)</span>
+                          </label>
+                          <input
+                            type="number"
+                            id="duracao_ciclo_menstrual"
+                            name="duracao_ciclo_menstrual"
+                            value={formData.duracao_ciclo_menstrual}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            required
+                            min="21"
+                            max="35"
+                            placeholder="5"
+                          />
+                          {formErrors.duracao_ciclo_menstrual && (
+                            <p className={themeClasses.errorText}>{formErrors.duracao_ciclo_menstrual}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Você monitora seu ciclo menstrual?
+                            <span className="text-sm text-gray-500 ml-2">(Usa aplicativo ou anota as datas)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="monitora_ciclo"
+                                checked={formData.monitora_ciclo === true}
+                                onChange={() => setFormData({...formData, monitora_ciclo: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="monitora_ciclo"
+                                checked={formData.monitora_ciclo === false}
+                                onChange={() => setFormData({...formData, monitora_ciclo: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* TPM */}
+                        <div className="form-group">
+                          <label htmlFor="sintomas_tpm" className={themeClasses.label}>
+                            Quais sintomas você costuma ter na TPM? (Separe por vírgula)
+                            <span className="text-sm text-gray-500 ml-2">(Ex: inchaço, dor de cabeça, irritabilidade, ansiedade)</span>
+                          </label>
+                          <textarea
+                            id="sintomas_tpm"
+                            name="sintomas_tpm"
+                            value={formData.sintomas_tpm.join(', ')}
+                            onChange={handleArrayChange}
+                            className={themeClasses.input}
+                            rows={3}
+                            placeholder="inchaço, dor de cabeça, irritabilidade, ansiedade"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="sintoma_tpm_principal" className={themeClasses.label}>
+                            Qual o sintoma que mais te incomoda na TPM?
+                            <span className="text-sm text-gray-500 ml-2">(Ex: irritabilidade)</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="sintoma_tpm_principal"
+                            name="sintoma_tpm_principal"
+                            value={formData.sintoma_tpm_principal}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            required
+                            placeholder="irritabilidade"
+                          />
+                          {formErrors.sintoma_principal_tpm && (
+                            <p className={themeClasses.errorText}>{formErrors.sintoma_principal_tpm}</p>
+                          )}
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="tpm_afeta_alimentacao" className={themeClasses.label}>
+                            Como a TPM afeta sua alimentação?
+                            <span className="text-sm text-gray-500 ml-2">(Ex: aumento do apetite, desejo por doces, compulsão alimentar)</span>
+                          </label>
+                          <textarea
+                            id="tpm_afeta_alimentacao"
+                            name="tpm_afeta_alimentacao"
+                            value={formData.tpm_afeta_alimentacao}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            rows={3}
+                            required
+                            placeholder="Durante a TPM tenho mais vontade de comer doces e aumento do apetite em geral"
+                          />
+                          {formErrors.tpm_afeta_alimentacao && (
+                            <p className={themeClasses.errorText}>{formErrors.tpm_afeta_alimentacao}</p>
+                          )}
+                        </div>
+
+                        {/* Doenças e Histórico */}
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Possui alguma doença ginecológica?
+                            <span className="text-sm text-gray-500 ml-2">(Ex: endometriose, mioma, SOP)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_doencas_ginecologicas"
+                                checked={formData.tem_doencas_ginecologicas === true}
+                                onChange={() => setFormData({...formData, tem_doencas_ginecologicas: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_doencas_ginecologicas"
+                                checked={formData.tem_doencas_ginecologicas === false}
+                                onChange={() => setFormData({...formData, tem_doencas_ginecologicas: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
 
                         {formData.tem_doencas_ginecologicas && (
-                          <div className="mt-4">
-                            <label htmlFor="doencas_ginecologicas" className="block text-sm font-medium text-slate-700">
-                              Quais doenças ginecológicas?*
+                          <div className="form-group">
+                            <label htmlFor="doencas_ginecologicas" className={themeClasses.label}>
+                              Quais doenças ginecológicas? (Separe por vírgula)
+                              <span className="text-sm text-gray-500 ml-2">(Ex: endometriose, mioma)</span>
                             </label>
                             <textarea
                               id="doencas_ginecologicas"
                               name="doencas_ginecologicas"
-                              value={formData.doencas_ginecologicas.join('\n')}
+                              value={formData.doencas_ginecologicas.join(', ')}
                               onChange={handleArrayChange}
-                              className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                formErrors.doencas_ginecologicas ? 'border-red-500' : ''
-                              }`}
+                              className={themeClasses.input}
                               rows={3}
-                              placeholder="Digite uma doença por linha"
+                              required={formData.tem_doencas_ginecologicas}
+                              placeholder="endometriose, mioma"
                             />
                             {formErrors.doencas_ginecologicas && (
-                              <p className="text-red-500 text-sm mt-1">{formErrors.doencas_ginecologicas}</p>
+                              <p className={themeClasses.errorText}>{formErrors.doencas_ginecologicas}</p>
                             )}
                           </div>
                         )}
-                      </div>
 
-                      {/* Acompanhamento Periódico */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Faz acompanhamento ginecológico periódico?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Consultas regulares com ginecologista
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="faz_acompanhamento_periodico"
-                              value="true"
-                              checked={formData.faz_acompanhamento_periodico === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Faz acompanhamento ginecológico periódico?
+                            <span className="text-sm text-gray-500 ml-2">(Consultas regulares com ginecologista)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="faz_acompanhamento_periodico"
-                              value="false"
-                              checked={formData.faz_acompanhamento_periodico === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Investigação de Doenças */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Está investigando alguma doença?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Realizando exames ou acompanhamento médico
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_suspeita_doenca"
-                              value="true"
-                              checked={formData.tem_suspeita_doenca === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
-                          </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_suspeita_doenca"
-                              value="false"
-                              checked={formData.tem_suspeita_doenca === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
-                        </div>
-{formData.tem_suspeita_doenca && (
-                          <div className="mt-4">
-                            <label htmlFor="suspeita_doenca" className="block text-sm font-medium text-slate-700">
-                              Qual doença está investigando?*
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="faz_acompanhamento_periodico"
+                                checked={formData.faz_acompanhamento_periodico === true}
+                                onChange={() => setFormData({...formData, faz_acompanhamento_periodico: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
                             </label>
-                            <textarea
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="faz_acompanhamento_periodico"
+                                checked={formData.faz_acompanhamento_periodico === false}
+                                onChange={() => setFormData({...formData, faz_acompanhamento_periodico: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Tem suspeita de alguma doença?
+                            <span className="text-sm text-gray-500 ml-2">(Ainda não diagnosticada)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_suspeita_doenca"
+                                checked={formData.tem_suspeita_doenca === true}
+                                onChange={() => setFormData({...formData, tem_suspeita_doenca: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_suspeita_doenca"
+                                checked={formData.tem_suspeita_doenca === false}
+                                onChange={() => setFormData({...formData, tem_suspeita_doenca: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {formData.tem_suspeita_doenca && (
+                          <div className="form-group">
+                            <label htmlFor="suspeita_doenca" className={themeClasses.label}>
+                              Qual doença suspeita?
+                              <span className="text-sm text-gray-500 ml-2">(Ex: endometriose)</span>
+                            </label>
+                            <input
+                              type="text"
                               id="suspeita_doenca"
                               name="suspeita_doenca"
                               value={formData.suspeita_doenca}
                               onChange={handleChange}
-                              className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                formErrors.suspeita_doenca ? 'border-red-500' : ''
-                              }`}
-                              rows={2}
-                              placeholder="Descreva a suspeita de doença"
+                              className={themeClasses.input}
+                              required={formData.tem_suspeita_doenca}
+                              placeholder="endometriose"
                             />
                             {formErrors.suspeita_doenca && (
-                              <p className="text-red-500 text-sm mt-1">{formErrors.suspeita_doenca}</p>
+                              <p className={themeClasses.errorText}>{formErrors.suspeita_doenca}</p>
                             )}
                           </div>
                         )}
-                      </div>
 
-                      {/* Histórico Familiar */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Tem histórico familiar de doenças ginecológicas?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Ex: câncer de mama, endometriose na família
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_historico_familiar"
-                              value="true"
-                              checked={formData.tem_historico_familiar === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Tem histórico familiar de doenças ginecológicas?
+                            <span className="text-sm text-gray-500 ml-2">(Mãe, irmãs, avós)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_historico_familiar"
-                              value="false"
-                              checked={formData.tem_historico_familiar === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_historico_familiar"
+                                checked={formData.tem_historico_familiar === true}
+                                onChange={() => setFormData({...formData, tem_historico_familiar: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_historico_familiar"
+                                checked={formData.tem_historico_familiar === false}
+                                onChange={() => setFormData({...formData, tem_historico_familiar: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
 
                         {formData.tem_historico_familiar && (
-                          <div className="mt-4">
-                            <label htmlFor="historico_familiar_ginecologico" className="block text-sm font-medium text-slate-700">
-                              Quais doenças no histórico familiar?*
+                          <div className="form-group">
+                            <label htmlFor="historico_familiar_ginecologico" className={themeClasses.label}>
+                              Quais doenças? (Separe por vírgula)
+                              <span className="text-sm text-gray-500 ml-2">(Ex: câncer de mama na avó, mioma na mãe)</span>
                             </label>
                             <textarea
                               id="historico_familiar_ginecologico"
                               name="historico_familiar_ginecologico"
-                              value={formData.historico_familiar_ginecologico.join('\n')}
+                              value={formData.historico_familiar_ginecologico.join(', ')}
                               onChange={handleArrayChange}
-                              className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                formErrors.historico_familiar_ginecologico ? 'border-red-500' : ''
-                              }`}
+                              className={themeClasses.input}
                               rows={3}
-                              placeholder="Digite uma doença por linha"
+                              required={formData.tem_historico_familiar}
+                              placeholder="câncer de mama na avó, mioma na mãe"
                             />
                             {formErrors.historico_familiar_ginecologico && (
-                              <p className="text-red-500 text-sm mt-1">{formErrors.historico_familiar_ginecologico}</p>
+                              <p className={themeClasses.errorText}>{formErrors.historico_familiar_ginecologico}</p>
                             )}
                           </div>
                         )}
                       </div>
-
-                      {/* Idade da Primeira Menstruação */}
-                      <div className="space-y-4">
-                        <label htmlFor="idade_primeira_menstruacao" className="block text-sm font-medium text-slate-700">
-                          Idade da primeira menstruação*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Idade em anos (menarca)
-                        </p>
-                        <input
-                          type="number"
-                          id="idade_primeira_menstruacao"
-                          name="idade_primeira_menstruacao"
-                          value={formData.idade_primeira_menstruacao}
-                          onChange={handleChange}
-                          min="8"
-                          max="18"
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.idade_primeira_menstruacao ? 'border-red-500' : ''
-                          }`}
-                          required
-                        />
-                        {formErrors.idade_primeira_menstruacao && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.idade_primeira_menstruacao}</p>
-                        )}
-                      </div>
-
-                      {/* Ciclo Menstrual Regular */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Ciclo menstrual é regular?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Intervalos regulares entre as menstruações
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="ciclo_menstrual_regular"
-                              value="true"
-                              checked={formData.ciclo_menstrual_regular === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
-                          </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="ciclo_menstrual_regular"
-                              value="false"
-                              checked={formData.ciclo_menstrual_regular === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Duração do Ciclo Menstrual */}
-                      <div className="space-y-4">
-                        <label htmlFor="duracao_ciclo_menstrual" className="block text-sm font-medium text-slate-700">
-                          Duração do ciclo menstrual (em dias)*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Ex: 28 (primeiro dia de uma menstruação até o dia anterior da próxima)
-                        </p>
-                        <input
-                          type="number"
-                          id="duracao_ciclo_menstrual"
-                          name="duracao_ciclo_menstrual"
-                          value={formData.duracao_ciclo_menstrual}
-                          onChange={handleChange}
-                          min="20"
-                          max="45"
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.duracao_ciclo_menstrual ? 'border-red-500' : ''
-                          }`}
-                          required
-                        />
-                        {formErrors.duracao_ciclo_menstrual && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.duracao_ciclo_menstrual}</p>
-                        )}
-                      </div>
-
-                      {/* Monitora Ciclo */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Monitora o ciclo menstrual?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Aplicativos, agenda ou outra forma de controle
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="monitora_ciclo"
-                              value="true"
-                              checked={formData.monitora_ciclo === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
-                          </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="monitora_ciclo"
-                              value="false"
-                              checked={formData.monitora_ciclo === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* Sintomas TPM */}
-                      <div className="space-y-4">
-                        <label htmlFor="sintomas_tpm" className="block text-sm font-medium text-slate-700">
-                          Sintomas de TPM*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Ex: inchaço, dor de cabeça, irritabilidade
-                        </p>
-                        <textarea
-                          id="sintomas_tpm"
-                          name="sintomas_tpm"
-                          value={formData.sintomas_tpm.join('\n')}
-                          onChange={handleArrayChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                          rows={3}
-                          placeholder="Digite um sintoma por linha"
-                        />
-                      </div>
-
-                      {/* Sintoma TPM Principal */}
-                      <div className="space-y-4">
-                        <label htmlFor="sintoma_tpm_principal" className="block text-sm font-medium text-slate-700">
-                          Principal sintoma de TPM*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Sintoma que mais incomoda
-                        </p>
-                        <input
-                          type="text"
-                          id="sintoma_tpm_principal"
-                          name="sintoma_tpm_principal"
-                          value={formData.sintoma_tpm_principal}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.sintoma_tpm_principal ? 'border-red-500' : ''
-                          }`}
-                          required
-                        />
-                        {formErrors.sintoma_tpm_principal && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.sintoma_tpm_principal}</p>
-                        )}
-                      </div>
-
-                      {/* TPM Afeta Alimentação */}
-                      <div className="space-y-4">
-                        <label htmlFor="tpm_afeta_alimentacao" className="block text-sm font-medium text-slate-700">
-                          TPM afeta sua alimentação?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Impacto da TPM nos hábitos alimentares
-                        </p>
-                        <select
-                          id="tpm_afeta_alimentacao"
-                          name="tpm_afeta_alimentacao"
-                          value={formData.tpm_afeta_alimentacao}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.tpm_afeta_alimentacao ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="NAO">Não afeta</option>
-                          <option value="POUCO">Afeta pouco</option>
-                          <option value="MODERADO">Afeta moderadamente</option>
-                          <option value="MUITO">Afeta muito</option>
-                        </select>
-                        {formErrors.tpm_afeta_alimentacao && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.tpm_afeta_alimentacao}</p>
-                        )}
-                      </div>
-
-                      {/* Método Contraceptivo */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Usa contraceptivo?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Pílula, DIU, implante, outros
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="usa_contraceptivo"
-                              value="true"
-                              checked={formData.usa_contraceptivo === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
-                          </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="usa_contraceptivo"
-                              value="false"
-                              checked={formData.usa_contraceptivo === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
-                        </div>
-
-                        {formData.usa_contraceptivo && (
-                          <div className="mt-4 space-y-4">
-                            <div>
-                              <label htmlFor="metodo_contraceptivo" className="block text-sm font-medium text-slate-700">
-                                Qual método contraceptivo?*
-                              </label>
-                              <input
-                                type="text"
-                                id="metodo_contraceptivo"
-                                name="metodo_contraceptivo"
-                                value={formData.metodo_contraceptivo}
-                                onChange={handleChange}
-                                className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                  formErrors.metodo_contraceptivo ? 'border-red-500' : ''
-                                }`}
-                                placeholder="Ex: Pílula, DIU, Implante"
-                              />
-                              {formErrors.metodo_contraceptivo && (
-                                <p className="text-red-500 text-sm mt-1">{formErrors.metodo_contraceptivo}</p>
-                              )}
-                            </div>
-                            <div>
-                              <label htmlFor="tempo_uso_contraceptivo" className="block text-sm font-medium text-slate-700">
-                                Há quanto tempo usa?*
-                              </label>
-                              <input
-                                type="text"
-                                id="tempo_uso_contraceptivo"
-                                name="tempo_uso_contraceptivo"
-                                value={formData.tempo_uso_contraceptivo}
-                                onChange={handleChange}
-                                className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                  formErrors.tempo_uso_contraceptivo ? 'border-red-500' : ''
-                                }`}
-                                placeholder="Ex: 2 anos e 3 meses"
-                              />
-                              {formErrors.tempo_uso_contraceptivo && (
-                                <p className="text-red-500 text-sm mt-1">{formErrors.tempo_uso_contraceptivo}</p>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Libido */}
-                      <div className="space-y-4">
-                        <label htmlFor="libido" className="block text-sm font-medium text-slate-700">
-                          Como está sua libido?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Desejo sexual
-                        </p>
-                        <select
-                          id="libido"
-                          name="libido"
-                          value={formData.libido}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.libido ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="BAIXA">Baixa</option>
-                          <option value="NORMAL">Normal</option>
-                          <option value="ALTA">Alta</option>
-                        </select>
-                        {formErrors.libido && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.libido}</p>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-between mt-8">
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                      className={`${theme.buttonSecondary} px-6 py-2 rounded-lg`}
-                    >
-                      Voltar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      className={`${theme.button} px-6 py-2 rounded-lg`}
-                    >
-                      Próximo
-                    </button>
-                  </div>
-                </div>
-              )}
-{/* Etapa 3 - Histórico Gestacional e Estilo de Vida */}
-              {currentStep === 3 && (
-                <div className="space-y-6">
-                  <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-purple-100">
-                    <h3 className="text-xl font-semibold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      Histórico Gestacional
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Já Engravidou */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Já engravidou?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Se já teve alguma gestação
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="ja_engravidou"
-                              value="true"
-                              checked={formData.ja_engravidou === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                  )}
+
+                  {/* Step 3: Estilo de Vida */}
+                  {currentStep === 3 && (
+                    <div className={themeClasses.card}>
+                      <h3 className={`${themeClasses.cardTitle} mb-6`}>
+                        Estilo de Vida e Histórico Gestacional
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Histórico Gestacional */}
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Já engravidou?
+                            <span className="text-sm text-gray-500 ml-2">(Considere todas as gestações)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="ja_engravidou"
-                              value="false"
-                              checked={formData.ja_engravidou === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="ja_engravidou"
+                                checked={formData.ja_engravidou === true}
+                                onChange={() => setFormData({...formData, ja_engravidou: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="ja_engravidou"
+                                checked={formData.ja_engravidou === false}
+                                onChange={() => setFormData({...formData, ja_engravidou: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
 
                         {formData.ja_engravidou && (
-                          <div className="mt-4 space-y-4">
-                            <div>
-                              <label htmlFor="quantidade_gestacoes" className="block text-sm font-medium text-slate-700">
-                                Quantas gestações?*
+                          <>
+                            <div className="form-group">
+                              <label htmlFor="quantidade_gestacoes" className={themeClasses.label}>
+                                Quantas gestações?
+                                <span className="text-sm text-gray-500 ml-2">(Incluindo gestações interrompidas)</span>
                               </label>
                               <input
                                 type="number"
@@ -1576,993 +1382,980 @@ export function AvaliacaoNutricionalFeminina() {
                                 value={formData.quantidade_gestacoes}
                                 onChange={handleChange}
                                 min="1"
-                                className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                  formErrors.quantidade_gestacoes ? 'border-red-500' : ''
-                                }`}
+                                className={themeClasses.input}
+                                required={formData.ja_engravidou}
+                                placeholder="Ex: 2"
                               />
-                              {formErrors.quantidade_gestacoes && (
-                                <p className="text-red-500 text-sm mt-1">{formErrors.quantidade_gestacoes}</p>
-                              )}
                             </div>
-                            <div>
-                              <label htmlFor="tipos_parto" className="block text-sm font-medium text-slate-700">
+
+                            <div className="form-group">
+                              <label htmlFor="tipos_parto" className={themeClasses.label}>
                                 Tipos de parto
+                                <span className="text-sm text-gray-500 ml-2">(Ex: 1 normal, 1 cesárea)</span>
                               </label>
                               <textarea
                                 id="tipos_parto"
                                 name="tipos_parto"
-                                value={formData.tipos_parto.join('\n')}
+                                value={formData.tipos_parto.join(', ')}
                                 onChange={handleArrayChange}
-                                className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1`}
+                                className={themeClasses.input}
                                 rows={2}
-                                placeholder="Um tipo por linha. Ex: Normal, Cesárea"
+                                placeholder="Ex: 1 parto normal em 2018, 1 cesárea em 2020"
                               />
                             </div>
+
+                            <div className="form-group">
+                              <label className={themeClasses.label}>
+                                Teve alguma perda gestacional?
+                                <span className="text-sm text-gray-500 ml-2">(Aborto espontâneo ou interrupção)</span>
+                              </label>
+                              <div className="flex space-x-4">
+                                <label className={themeClasses.radioLabel}>
+                                  <input
+                                    type="radio"
+                                    name="teve_perda_gestacional"
+                                    checked={formData.teve_perda_gestacional === true}
+                                    onChange={() => setFormData({...formData, teve_perda_gestacional: true})}
+                                    className={themeClasses.radio}
+                                  />
+                                  <span className="ml-2">Sim</span>
+                                </label>
+                                <label className={themeClasses.radioLabel}>
+                                  <input
+                                    type="radio"
+                                    name="teve_perda_gestacional"
+                                    checked={formData.teve_perda_gestacional === false}
+                                    onChange={() => setFormData({...formData, teve_perda_gestacional: false})}
+                                    className={themeClasses.radio}
+                                  />
+                                  <span className="ml-2">Não</span>
+                                </label>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Está tentando engravidar?
+                            <span className="text-sm text-gray-500 ml-2">(Busca ativa por gravidez)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tentando_engravidar"
+                                checked={formData.tentando_engravidar === true}
+                                onChange={() => setFormData({...formData, tentando_engravidar: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tentando_engravidar"
+                                checked={formData.tentando_engravidar === false}
+                                onChange={() => setFormData({...formData, tentando_engravidar: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
                           </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Usa método contraceptivo?
+                            <span className="text-sm text-gray-500 ml-2">(Pílula, DIU, etc)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="usa_contraceptivo"
+                                checked={formData.usa_contraceptivo === true}
+                                onChange={() => setFormData({...formData, usa_contraceptivo: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="usa_contraceptivo"
+                                checked={formData.usa_contraceptivo === false}
+                                onChange={() => setFormData({...formData, usa_contraceptivo: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {formData.usa_contraceptivo && (
+                          <>
+                            <div className="form-group">
+                              <label htmlFor="metodo_contraceptivo" className={themeClasses.label}>
+                                Qual método contraceptivo?
+                                <span className="text-sm text-gray-500 ml-2">(Ex: Pílula Yasmin, DIU Mirena)</span>
+                              </label>
+                              <input
+                                type="text"
+                                id="metodo_contraceptivo"
+                                name="metodo_contraceptivo"
+                                value={formData.metodo_contraceptivo}
+                                onChange={handleChange}
+                                className={themeClasses.input}
+                                required={formData.usa_contraceptivo}
+                                placeholder="Ex: Pílula Yasmin"
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label htmlFor="tempo_uso_contraceptivo" className={themeClasses.label}>
+                                Há quanto tempo usa?
+                                <span className="text-sm text-gray-500 ml-2">(Ex: 2 anos e 3 meses)</span>
+                              </label>
+                              <input
+                                type="text"
+                                id="tempo_uso_contraceptivo"
+                                name="tempo_uso_contraceptivo"
+                                value={formData.tempo_uso_contraceptivo}
+                                onChange={handleChange}
+                                className={themeClasses.input}
+                                required={formData.usa_contraceptivo}
+                                placeholder="Ex: 2 anos e 3 meses"
+                              />
+                            </div>
+                          </>
                         )}
-                      </div>
 
-                      {/* Perda Gestacional */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Teve alguma perda gestacional?
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Aborto espontâneo ou interrupção da gestação
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="teve_perda_gestacional"
-                              value="true"
-                              checked={formData.teve_perda_gestacional === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label htmlFor="libido" className={themeClasses.label}>
+                            Como está sua libido?
+                            <span className="text-sm text-gray-500 ml-2">(Desejo sexual)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="teve_perda_gestacional"
-                              value="false"
-                              checked={formData.teve_perda_gestacional === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <select
+                            id="libido"
+                            name="libido"
+                            value={formData.libido}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="normal">Normal</option>
+                            <option value="aumentada">Aumentada</option>
+                            <option value="diminuida">Diminuída</option>
+                            <option value="ausente">Ausente</option>
+                          </select>
                         </div>
-                      </div>
 
-                      {/* Tentando Engravidar */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Está tentando engravidar?
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Se está buscando uma gravidez atualmente
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tentando_engravidar"
-                              value="true"
-                              checked={formData.tentando_engravidar === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        {/* Estilo de Vida */}
+                        <div className="form-group">
+                          <label htmlFor="nivel_estresse" className={themeClasses.label}>
+                            Nível de Estresse (1-10)
+                            <span className="text-sm text-gray-500 ml-2">(1: muito baixo, 10: muito alto)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tentando_engravidar"
-                              value="false"
-                              checked={formData.tentando_engravidar === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <input
+                            type="number"
+                            id="nivel_estresse"
+                            name="nivel_estresse"
+                            value={formData.nivel_estresse}
+                            onChange={handleChange}
+                            min="1"
+                            max="10"
+                            className={themeClasses.input}
+                            placeholder="Ex: 7"
+                          />
                         </div>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-purple-100 mt-8">
-                    <h3 className="text-xl font-semibold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      Estilo de Vida
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Nível de Estresse */}
-                      <div className="space-y-4">
-                        <label htmlFor="nivel_estresse" className="block text-sm font-medium text-slate-700">
-                          Nível de Estresse (0-10)*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          0 = sem estresse, 10 = extremamente estressada
-                        </p>
-                        <input
-                          type="range"
-                          id="nivel_estresse"
-                          name="nivel_estresse"
-                          value={formData.nivel_estresse}
-                          onChange={handleChange}
-                          min="0"
-                          max="10"
-                          step="1"
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                        />
-                        <div className="text-center font-bold text-blue-600">{formData.nivel_estresse}</div>
-                      </div>
-
-                      {/* Fumante */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          É fumante?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Uso de cigarro ou outros produtos de tabaco
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="fumante"
-                              value="true"
-                              checked={formData.fumante === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Fumante?
+                            <span className="text-sm text-gray-500 ml-2">(Inclui cigarro eletrônico)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="fumante"
-                              value="false"
-                              checked={formData.fumante === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="fumante"
+                                checked={formData.fumante === true}
+                                onChange={() => setFormData({...formData, fumante: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="fumante"
+                                checked={formData.fumante === false}
+                                onChange={() => setFormData({...formData, fumante: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Consumo de Álcool */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Consome bebidas alcoólicas?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Consumo de bebidas como cerveja, vinho, destilados
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="consumo_alcool"
-                              value="true"
-                              checked={formData.consumo_alcool === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label htmlFor="consumo_alcool" className={themeClasses.label}>
+                            Consumo de bebidas alcoólicas
+                            <span className="text-sm text-gray-500 ml-2">(Frequência semanal)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="consumo_alcool"
-                              value="false"
-                              checked={formData.consumo_alcool === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <select
+                            id="consumo_alcool"
+                            name="consumo_alcool"
+                            value={formData.consumo_alcool}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="nunca">Nunca</option>
+                            <option value="raramente">Raramente (1x por mês ou menos)</option>
+                            <option value="ocasionalmente">Ocasionalmente (1-2x por semana)</option>
+                            <option value="frequentemente">Frequentemente (3-4x por semana)</option>
+                            <option value="diariamente">Diariamente</option>
+                          </select>
                         </div>
-                      </div>
 
-                      {/* Horas de Sono */}
-                      <div className="space-y-4">
-                        <label htmlFor="horas_sono" className="block text-sm font-medium text-slate-700">
-                          Horas de Sono*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Média de horas de sono por noite
-                        </p>
-                        <input
-                          type="number"
-                          id="horas_sono"
-                          name="horas_sono"
-                          value={formData.horas_sono}
-                          onChange={handleChange}
-                          min="1"
-                          max="12"
-                          step="0.5"
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.horas_sono ? 'border-red-500' : ''
-                          }`}
-                          required
-                        />
-                        {formErrors.horas_sono && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.horas_sono}</p>
-                        )}
-                      </div>
-
-                      {/* Qualidade do Sono */}
-                      <div className="space-y-4">
-                        <label htmlFor="qualidade_sono" className="block text-sm font-medium text-slate-700">
-                          Qualidade do Sono*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Como você avalia a qualidade do seu sono
-                        </p>
-                        <select
-                          id="qualidade_sono"
-                          name="qualidade_sono"
-                          value={formData.qualidade_sono}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.qualidade_sono ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="RUIM">Ruim</option>
-                          <option value="REGULAR">Regular</option>
-                          <option value="BOA">Boa</option>
-                          <option value="OTIMA">Ótima</option>
-                        </select>
-                        {formErrors.qualidade_sono && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.qualidade_sono}</p>
-                        )}
-                      </div>
-
-                      {/* Prática de Exercícios */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Pratica exercícios físicos?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Atividades físicas regulares
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="pratica_exercicios"
-                              value="true"
-                              checked={formData.pratica_exercicios === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label htmlFor="horas_sono" className={themeClasses.label}>
+                            Quantas horas dorme por noite?
+                            <span className="text-sm text-gray-500 ml-2">(Em média)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="pratica_exercicios"
-                              value="false"
-                              checked={formData.pratica_exercicios === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
+                          <input
+                            type="number"
+                            id="horas_sono"
+                            name="horas_sono"
+                            value={formData.horas_sono}
+                            onChange={handleChange}
+                            min="1"
+                            max="24"
+                            className={themeClasses.input}
+                            required
+                            placeholder="Ex: 7"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="qualidade_sono" className={themeClasses.label}>
+                            Como avalia a qualidade do seu sono?
+                            <span className="text-sm text-gray-500 ml-2">(Considere o último mês)</span>
                           </label>
+                          <select
+                            id="qualidade_sono"
+                            name="qualidade_sono"
+                            value={formData.qualidade_sono}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="otima">Ótima - Acordo disposta</option>
+                            <option value="boa">Boa - Acordo relativamente bem</option>
+                            <option value="regular">Regular - Às vezes acordo cansada</option>
+                            <option value="ruim">Ruim - Frequentemente acordo cansada</option>
+                            <option value="pessima">Péssima - Sempre acordo cansada</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Pratica exercícios físicos?
+                            <span className="text-sm text-gray-500 ml-2">(Atividade física regular)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="pratica_exercicios"
+                                checked={formData.pratica_exercicios === true}
+                                onChange={() => setFormData({...formData, pratica_exercicios: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="pratica_exercicios"
+                                checked={formData.pratica_exercicios === false}
+                                onChange={() => setFormData({...formData, pratica_exercicios: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
 
                         {formData.pratica_exercicios && (
-                          <div className="mt-4">
-                            <label htmlFor="detalhes_exercicios" className="block text-sm font-medium text-slate-700">
-                              Quais exercícios e com que frequência?*
+                          <>
+                            <div className="form-group">
+                              <label htmlFor="frequencia_exercicios" className={themeClasses.label}>
+                                Frequência de exercícios
+                                <span className="text-sm text-gray-500 ml-2">(Vezes por semana)</span>
+                              </label>
+                              <select
+                                id="frequencia_exercicios"
+                                name="frequencia_exercicios"
+                                value={formData.frequencia_exercicios}
+                                onChange={handleChange}
+                                className={themeClasses.select}
+                                required={formData.pratica_exercicios}
+                              >
+                                <option value="">Selecione</option>
+                                <option value="diariamente">Diariamente</option>
+                                <option value="3_4_vezes">3-4 vezes por semana</option>
+                                <option value="1_2_vezes">1-2 vezes por semana</option>
+                                <option value="ocasionalmente">Ocasionalmente</option>
+                              </select>
+                            </div>
+
+                            <div className="form-group">
+                              <label htmlFor="tipo_exercicios" className={themeClasses.label}>
+                                Quais exercícios pratica?
+                                <span className="text-sm text-gray-500 ml-2">(Ex: musculação, pilates)</span>
+                              </label>
+                              <textarea
+                                id="tipo_exercicios"
+                                name="tipo_exercicios"
+                                value={formData.tipo_exercicios}
+                                onChange={handleChange}
+                                className={themeClasses.input}
+                                rows={2}
+                                required={formData.pratica_exercicios}
+                                placeholder="Ex: Musculação 3x/semana, Pilates 2x/semana"
+                              />
+                            </div>
+
+                            <div className="form-group">
+                              <label htmlFor="detalhes_exercicios" className={themeClasses.label}>
+                                Detalhes dos exercícios
+                                <span className="text-sm text-gray-500 ml-2">(Duração, intensidade, etc)</span>
+                              </label>
+                              <textarea
+                                id="detalhes_exercicios"
+                                name="detalhes_exercicios"
+                                value={formData.detalhes_exercicios}
+                                onChange={handleChange}
+                                className={themeClasses.input}
+                                rows={3}
+                                required={formData.pratica_exercicios}
+                                placeholder="Ex: Musculação 1h por sessão, intensidade moderada. Pilates 50min por sessão"
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4: Hábitos Alimentares */}
+                  {currentStep === 4 && (
+                    <div className={themeClasses.card}>
+                      <h3 className={`${themeClasses.cardTitle} mb-6`}>
+                        Hábitos Alimentares e Intestinais
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 gap-6">
+                        {/* Hábitos Intestinais */}
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Seu intestino é regular?
+                            <span className="text-sm text-gray-500 ml-2">(Evacuação em horários semelhantes)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="intestino_regular"
+                                checked={formData.intestino_regular === true}
+                                onChange={() => setFormData({...formData, intestino_regular: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
                             </label>
-                            <textarea
-                              id="detalhes_exercicios"
-                              name="detalhes_exercicios"
-                              value={formData.detalhes_exercicios}
-                              onChange={handleChange}
-                              className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                formErrors.detalhes_exercicios ? 'border-red-500' : ''
-                              }`}
-                              rows={3}
-                              placeholder="Ex: Musculação 3x na semana, Corrida 2x na semana"
-                            />
-                            {formErrors.detalhes_exercicios && (
-                              <p className="text-red-500 text-sm mt-1">{formErrors.detalhes_exercicios}</p>
-                            )}
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="intestino_regular"
+                                checked={formData.intestino_regular === false}
+                                onChange={() => setFormData({...formData, intestino_regular: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Consumo de Água */}
-                      <div className="space-y-4">
-                        <label htmlFor="consumo_agua" className="block text-sm font-medium text-slate-700">
-                          Consumo de Água (litros/dia)*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Quantidade aproximada de água que bebe por dia
-                        </p>
-                        <input
-                          type="number"
-                          id="consumo_agua"
-                          name="consumo_agua"
-                          value={formData.consumo_agua}
-                          onChange={handleChange}
-                          min="0"
-                          step="0.5"
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.consumo_agua ? 'border-red-500' : ''
-                          }`}
-                          required
-                        />
-                        {formErrors.consumo_agua && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.consumo_agua}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between mt-8">
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                      className={`${theme.buttonSecondary} px-6 py-2 rounded-lg`}
-                    >
-                      Voltar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={nextStep}
-                      className={`${theme.button} px-6 py-2 rounded-lg`}
-                    >
-                      Próximo
-                    </button>
-                  </div>
-                </div>
-              )}
-{/* Etapa 4 - Hábitos Intestinais e Alimentares */}
-              {currentStep === 4 && (
-                <div className="space-y-6">
-                  <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-purple-100">
-                    <h3 className="text-xl font-semibold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      Hábitos Intestinais
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Intestino Regular */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Intestino é regular?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Funcionamento regular e previsível do intestino
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="intestino_regular"
-                              value="true"
-                              checked={formData.intestino_regular === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
-                          </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="intestino_regular"
-                              value="false"
-                              checked={formData.intestino_regular === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
                         </div>
-                      </div>
 
-                      {/* Frequência Intestinal */}
-                      <div className="space-y-4">
-                        <label htmlFor="frequencia_intestinal" className="block text-sm font-medium text-slate-700">
-                          Frequência Intestinal
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Com que frequência evacua
-                        </p>
-                        <select
-                          id="frequencia_intestinal"
-                          name="frequencia_intestinal"
-                          value={formData.frequencia_intestinal}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                        >
-                          <option value="">Selecione</option>
-                          <option value="DIARIO">Diariamente</option>
-                          <option value="DIAS_ALTERNADOS">Dias alternados</option>
-                          <option value="2_3_DIAS">A cada 2-3 dias</option>
-                          <option value="SEMANAL">Semanalmente</option>
-                          <option value="IRREGULAR">Irregular</option>
-                        </select>
-                      </div>
-
-                      {/* Frequência de Evacuação */}
-                      <div className="space-y-4">
-                        <label htmlFor="frequencia_evacuacao" className="block text-sm font-medium text-slate-700">
-                          Frequência de evacuação*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Quantas vezes evacua por dia
-                        </p>
-                        <select
-                          id="frequencia_evacuacao"
-                          name="frequencia_evacuacao"
-                          value={formData.frequencia_evacuacao}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.frequencia_evacuacao ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="1">1x por dia</option>
-                          <option value="2">2x por dia</option>
-                          <option value="3">3x ou mais por dia</option>
-                          <option value="0">Menos de 1x por dia</option>
-                        </select>
-                        {formErrors.frequencia_evacuacao && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.frequencia_evacuacao}</p>
-                        )}
-                      </div>
-
-                      {/* Consistência das Fezes */}
-                      <div className="space-y-4">
-                        <label htmlFor="consistencia_fezes" className="block text-sm font-medium text-slate-700">
-                          Consistência das fezes*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Tipo de consistência mais frequente
-                        </p>
-                        <select
-                          id="consistencia_fezes"
-                          name="consistencia_fezes"
-                          value={formData.consistencia_fezes}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.consistencia_fezes ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="RESSECADA">Ressecada</option>
-                          <option value="NORMAL">Normal</option>
-                          <option value="AMOLECIDA">Amolecida</option>
-                          <option value="LIQUIDA">Líquida</option>
-                        </select>
-                        {formErrors.consistencia_fezes && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.consistencia_fezes}</p>
-                        )}
-                      </div>
-
-                      {/* Constipação */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Tem constipação com frequência?
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Dificuldade para evacuar regularmente
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_constipacao"
-                              value="true"
-                              checked={formData.tem_constipacao === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label htmlFor="frequencia_evacuacao" className={themeClasses.label}>
+                            Com que frequência evacua?
+                            <span className="text-sm text-gray-500 ml-2">(Ex: 1 vez por dia, pela manhã)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_constipacao"
-                              value="false"
-                              checked={formData.tem_constipacao === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <select
+                            id="frequencia_evacuacao"
+                            name="frequencia_evacuacao"
+                            value={formData.frequencia_evacuacao}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="mais_1_dia">Mais de 1 vez por dia</option>
+                            <option value="1_dia">1 vez por dia</option>
+                            <option value="2_dias">A cada 2 dias</option>
+                            <option value="3_dias">A cada 3 dias</option>
+                            <option value="mais_3_dias">Mais de 3 dias</option>
+                          </select>
                         </div>
-                      </div>
 
-                      {/* Diarreia */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Tem diarreia com frequência?
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Evacuações frequentes e líquidas
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_diarreia"
-                              value="true"
-                              checked={formData.tem_diarreia === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label htmlFor="consistencia_fezes" className={themeClasses.label}>
+                            Consistência das fezes
+                            <span className="text-sm text-gray-500 ml-2">(Considere a maioria das vezes)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_diarreia"
-                              value="false"
-                              checked={formData.tem_diarreia === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <select
+                            id="consistencia_fezes"
+                            name="consistencia_fezes"
+                            value={formData.consistencia_fezes}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="ressecadas">Ressecadas (difícil passagem)</option>
+                            <option value="normais">Normais (bem formadas)</option>
+                            <option value="amolecidas">Amolecidas (pastosas)</option>
+                            <option value="liquidas">Líquidas (diarreia)</option>
+                          </select>
                         </div>
-                      </div>
 
-                      {/* Dificuldade para Evacuar */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Dificuldade para evacuar?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Esforço excessivo ou dificuldade durante a evacuação
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="dificuldade_evacuar"
-                              value="true"
-                              checked={formData.dificuldade_evacuar === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Tem constipação?
+                            <span className="text-sm text-gray-500 ml-2">(Dificuldade para evacuar, fezes ressecadas)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="dificuldade_evacuar"
-                              value="false"
-                              checked={formData.dificuldade_evacuar === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_constipacao"
+                                checked={formData.tem_constipacao === true}
+                                onChange={() => setFormData({...formData, tem_constipacao: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_constipacao"
+                                checked={formData.tem_constipacao === false}
+                                onChange={() => setFormData({...formData, tem_constipacao: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Sangramento ao Evacuar */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Sangramento ao evacuar?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Presença de sangue nas fezes ou papel higiênico
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="sangramento_evacuar"
-                              value="true"
-                              checked={formData.sangramento_evacuar === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Tem diarreia?
+                            <span className="text-sm text-gray-500 ml-2">(Fezes líquidas, mais de 3 vezes ao dia)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="sangramento_evacuar"
-                              value="false"
-                              checked={formData.sangramento_evacuar === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_diarreia"
+                                checked={formData.tem_diarreia === true}
+                                onChange={() => setFormData({...formData, tem_diarreia: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_diarreia"
+                                checked={formData.tem_diarreia === false}
+                                onChange={() => setFormData({...formData, tem_diarreia: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Observações Intestinais */}
-                      <div className="md:col-span-2 space-y-4">
-                        <label htmlFor="observacoes_intestinais" className="block text-sm font-medium text-slate-700">
-                          Observações adicionais sobre hábitos intestinais
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Outras informações relevantes sobre seu intestino
-                        </p>
-                        <textarea
-                          id="observacoes_intestinais"
-                          name="observacoes_intestinais"
-                          value={formData.observacoes_intestinais}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                          rows={3}
-                          placeholder="Qualquer outra informação relevante sobre seus hábitos intestinais"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-purple-100 mt-8">
-                    <h3 className="text-xl font-semibold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      Hábitos Alimentares
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {/* Intolerância Alimentar */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Tem intolerância alimentar?
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Ex: lactose, glúten, frutose
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_intolerancia"
-                              value="true"
-                              checked={formData.tem_intolerancia === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Tem dificuldade para evacuar?
+                            <span className="text-sm text-gray-500 ml-2">(Esforço excessivo, demora muito tempo)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="tem_intolerancia"
-                              value="false"
-                              checked={formData.tem_intolerancia === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
-                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="dificuldade_evacuar"
+                                checked={formData.dificuldade_evacuar === true}
+                                onChange={() => setFormData({...formData, dificuldade_evacuar: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="dificuldade_evacuar"
+                                checked={formData.dificuldade_evacuar === false}
+                                onChange={() => setFormData({...formData, dificuldade_evacuar: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
                         </div>
-{formData.tem_intolerancia && (
-                          <div className="mt-4">
-                            <label htmlFor="intolerancia_alimentar" className="block text-sm font-medium text-slate-700">
-                              Quais intolerâncias?*
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Tem sangramento ao evacuar?
+                            <span className="text-sm text-gray-500 ml-2">(Sangue nas fezes ou no papel higiênico)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="sangramento_evacuar"
+                                checked={formData.sangramento_evacuar === true}
+                                onChange={() => setFormData({...formData, sangramento_evacuar: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="sangramento_evacuar"
+                                checked={formData.sangramento_evacuar === false}
+                                onChange={() => setFormData({...formData, sangramento_evacuar: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="observacoes_intestinais" className={themeClasses.label}>
+                            Observações sobre hábitos intestinais
+                            <span className="text-sm text-gray-500 ml-2">(Ex: gases, dor, inchaço)</span>
+                          </label>
+                          <textarea
+                            id="observacoes_intestinais"
+                            name="observacoes_intestinais"
+                            value={formData.observacoes_intestinais}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            rows={3}
+                            placeholder="Ex: Sinto gases após consumir leite, tenho dor abdominal antes de evacuar"
+                          />
+                        </div>
+
+                        {/* Hábitos Alimentares */}
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Tem intolerância alimentar?
+                            <span className="text-sm text-gray-500 ml-2">(Diagnóstico médico ou suspeita)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_intolerancia"
+                                checked={formData.tem_intolerancia === true}
+                                onChange={() => setFormData({...formData, tem_intolerancia: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="tem_intolerancia"
+                                checked={formData.tem_intolerancia === false}
+                                onChange={() => setFormData({...formData, tem_intolerancia: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {formData.tem_intolerancia && (
+                          <div className="form-group">
+                            <label htmlFor="intolerancia_alimentar" className={themeClasses.label}>
+                              Quais intolerâncias?
+                              <span className="text-sm text-gray-500 ml-2">(Ex: lactose, glúten, frutose)</span>
                             </label>
                             <textarea
                               id="intolerancia_alimentar"
                               name="intolerancia_alimentar"
-                              value={formData.intolerancia_alimentar.join('\n')}
+                              value={formData.intolerancia_alimentar.join(', ')}
                               onChange={handleArrayChange}
-                              className={`${theme.input} w-full rounded-lg py-3 px-4 mt-1 ${
-                                formErrors.intolerancia_alimentar ? 'border-red-500' : ''
-                              }`}
-                              rows={3}
-                              placeholder="Digite uma intolerância por linha"
+                              className={themeClasses.input}
+                              rows={2}
+                              required={formData.tem_intolerancia}
+                              placeholder="Ex: Intolerância à lactose (diagnosticada), suspeita de intolerância ao glúten"
                             />
-                            {formErrors.intolerancia_alimentar && (
-                              <p className="text-red-500 text-sm mt-1">{formErrors.intolerancia_alimentar}</p>
-                            )}
                           </div>
                         )}
-                      </div>
 
-                      {/* Alimentos Essenciais */}
-                      <div className="space-y-4">
-                        <label htmlFor="alimentos_essenciais" className="block text-sm font-medium text-slate-700">
-                          Alimentos que não podem faltar
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Alimentos que você consome diariamente ou com frequência
-                        </p>
-                        <textarea
-                          id="alimentos_essenciais"
-                          name="alimentos_essenciais"
-                          value={formData.alimentos_essenciais.join('\n')}
-                          onChange={handleArrayChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                          rows={3}
-                          placeholder="Digite um alimento por linha"
-                        />
-                      </div>
-
-                      {/* Preferência de Sabor */}
-                      <div className="space-y-4">
-                        <label htmlFor="preferencia_sabor" className="block text-sm font-medium text-slate-700">
-                          Preferência de sabor
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Qual sabor você prefere
-                        </p>
-                        <select
-                          id="preferencia_sabor"
-                          name="preferencia_sabor"
-                          value={formData.preferencia_sabor}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                        >
-                          <option value="">Selecione</option>
-                          <option value="DOCE">Doce</option>
-                          <option value="SALGADO">Salgado</option>
-                          <option value="ACIDO">Ácido</option>
-                          <option value="AMARGO">Amargo</option>
-                          <option value="TODOS">Todos</option>
-                        </select>
-                      </div>
-
-                      {/* Aversão Alimentar */}
-                      <div className="space-y-4">
-                        <label htmlFor="aversao_alimentar" className="block text-sm font-medium text-slate-700">
-                          Alimentos que não gosta
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Alimentos que você evita ou tem aversão
-                        </p>
-                        <textarea
-                          id="aversao_alimentar"
-                          name="aversao_alimentar"
-                          value={formData.aversao_alimentar.join('\n')}
-                          onChange={handleArrayChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4`}
-                          rows={3}
-                          placeholder="Digite um alimento por linha"
-                        />
-                      </div>
-
-                      {/* Número de Refeições */}
-                      <div className="space-y-4">
-                        <label htmlFor="numero_refeicoes" className="block text-sm font-medium text-slate-700">
-                          Número de refeições por dia*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Quantas refeições faz por dia
-                        </p>
-                        <select
-                          id="numero_refeicoes"
-                          name="numero_refeicoes"
-                          value={formData.numero_refeicoes}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.numero_refeicoes ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="2">2 refeições</option>
-                          <option value="3">3 refeições</option>
-                          <option value="4">4 refeições</option>
-                          <option value="5">5 refeições</option>
-                          <option value="6">6 refeições ou mais</option>
-                        </select>
-                        {formErrors.numero_refeicoes && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.numero_refeicoes}</p>
-                        )}
-                      </div>
-
-                      {/* Local das Refeições */}
-                      <div className="space-y-4">
-                        <label htmlFor="local_refeicoes" className="block text-sm font-medium text-slate-700">
-                          Local das refeições*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Onde costuma realizar as refeições
-                        </p>
-                        <select
-                          id="local_refeicoes"
-                          name="local_refeicoes"
-                          value={formData.local_refeicoes}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.local_refeicoes ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="CASA">Em casa</option>
-                          <option value="TRABALHO">No trabalho</option>
-                          <option value="RESTAURANTE">Em restaurantes</option>
-                          <option value="MISTO">Misto (casa e fora)</option>
-                        </select>
-                        {formErrors.local_refeicoes && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.local_refeicoes}</p>
-                        )}
-                      </div>
-
-                      {/* Consumo de Água */}
-                      <div className="space-y-4">
-                        <label htmlFor="consumo_agua_litros" className="block text-sm font-medium text-slate-700">
-                          Consumo de água diário (litros)*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Quantidade de água em litros por dia
-                        </p>
-                        <input
-                          type="number"
-                          id="consumo_agua_litros"
-                          name="consumo_agua_litros"
-                          value={formData.consumo_agua_litros}
-                          onChange={handleChange}
-                          step="0.5"
-                          min="0"
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.consumo_agua_litros ? 'border-red-500' : ''
-                          }`}
-                          required
-                        />
-                        {formErrors.consumo_agua_litros && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.consumo_agua_litros}</p>
-                        )}
-                      </div>
-
-                      {/* Velocidade ao Comer */}
-                      <div className="space-y-4">
-                        <label htmlFor="velocidade_comer" className="block text-sm font-medium text-slate-700">
-                          Velocidade ao comer*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Quão rápido você come
-                        </p>
-                        <select
-                          id="velocidade_comer"
-                          name="velocidade_comer"
-                          value={formData.velocidade_comer}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.velocidade_comer ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="DEVAGAR">Devagar</option>
-                          <option value="NORMAL">Normal</option>
-                          <option value="RAPIDO">Rápido</option>
-                          <option value="MUITO_RAPIDO">Muito rápido</option>
-                        </select>
-                        {formErrors.velocidade_comer && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.velocidade_comer}</p>
-                        )}
-                      </div>
-{/* Mastigação */}
-                      <div className="space-y-4">
-                        <label htmlFor="mastigacao" className="block text-sm font-medium text-slate-700">
-                          Mastigação*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Como você classifica sua mastigação
-                        </p>
-                        <select
-                          id="mastigacao"
-                          name="mastigacao"
-                          value={formData.mastigacao}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.mastigacao ? 'border-red-500' : ''
-                          }`}
-                          required
-                        >
-                          <option value="">Selecione</option>
-                          <option value="RUIM">Ruim</option>
-                          <option value="REGULAR">Regular</option>
-                          <option value="BOA">Boa</option>
-                          <option value="OTIMA">Ótima</option>
-                        </select>
-                        {formErrors.mastigacao && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.mastigacao}</p>
-                        )}
-                      </div>
-
-                      {/* Belisca Entre Refeições */}
-                      <div className="space-y-4">
-                        <label className="block text-sm font-medium text-slate-700">
-                          Belisca entre as refeições?*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Consome pequenos lanches fora dos horários das refeições
-                        </p>
-                        <div className="flex gap-4">
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="belisca_entre_refeicoes"
-                              value="true"
-                              checked={formData.belisca_entre_refeicoes === true}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Sim</span>
+                        <div className="form-group">
+                          <label htmlFor="alimentos_essenciais" className={themeClasses.label}>
+                            Alimentos que não podem faltar na sua alimentação
+                            <span className="text-sm text-gray-500 ml-2">(Alimentos que você consome diariamente)</span>
                           </label>
-                          <label className="inline-flex items-center">
-                            <input
-                              type="radio"
-                              name="belisca_entre_refeicoes"
-                              value="false"
-                              checked={formData.belisca_entre_refeicoes === false}
-                              onChange={handleChange}
-                              className="form-radio text-blue-600"
-                            />
-                            <span className="ml-2 text-slate-700">Não</span>
+                          <textarea
+                            id="alimentos_essenciais"
+                            name="alimentos_essenciais"
+                            value={formData.alimentos_essenciais.join(', ')}
+                            onChange={handleArrayChange}
+                            className={themeClasses.input}
+                            rows={3}
+                            placeholder="Ex: arroz integral, frango, ovos, banana, aveia, café"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="preferencia_sabor" className={themeClasses.label}>
+                            Qual sabor você mais gosta?
+                            <span className="text-sm text-gray-500 ml-2">(Sua preferência principal)</span>
                           </label>
+                          <select
+                            id="preferencia_sabor"
+                            name="preferencia_sabor"
+                            value={formData.preferencia_sabor}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                          >
+                            <option value="">Selecione</option>
+                            <option value="doce">Doce (chocolates, bolos, sobremesas)</option>
+                            <option value="salgado">Salgado (salgadinhos, frituras)</option>
+                            <option value="azedo">Azedo (limão, vinagre)</option>
+                            <option value="amargo">Amargo (café puro, chocolate amargo)</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="aversao_alimentar" className={themeClasses.label}>
+                            Alimentos que você não gosta ou não come
+                            <span className="text-sm text-gray-500 ml-2">(Aversões e restrições)</span>
+                          </label>
+                          <textarea
+                            id="aversao_alimentar"
+                            name="aversao_alimentar"
+                            value={formData.aversao_alimentar.join(', ')}
+                            onChange={handleArrayChange}
+                            className={themeClasses.input}
+                            rows={3}
+                            placeholder="Ex: jiló, fígado, berinjela, peixe cru"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="horario_mais_fome" className={themeClasses.label}>
+                            Em qual horário você sente mais fome?
+                            <span className="text-sm text-gray-500 ml-2">(Horário de maior apetite)</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="horario_mais_fome"
+                            name="horario_mais_fome"
+                            value={formData.horario_mais_fome}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            placeholder="Ex: Entre 15h e 16h da tarde, ou antes do almoço"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="numero_refeicoes" className={themeClasses.label}>
+                            Quantas refeições faz por dia?
+                            <span className="text-sm text-gray-500 ml-2">(Incluindo lanches)</span>
+                          </label>
+                          <input
+                            type="number"
+                            id="numero_refeicoes"
+                            name="numero_refeicoes"
+                            value={formData.numero_refeicoes}
+                            onChange={handleChange}
+                            min="1"
+                            max="10"
+                            className={themeClasses.input}
+                            required
+                            placeholder="Ex: 6 (café, lanche, almoço, lanche, jantar, ceia)"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="local_refeicoes" className={themeClasses.label}>
+                            Onde costuma fazer suas refeições?
+                            <span className="text-sm text-gray-500 ml-2">(Local mais frequente)</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="local_refeicoes"
+                            name="local_refeicoes"
+                            value={formData.local_refeicoes}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            placeholder="Ex: Almoço no trabalho, demais refeições em casa"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="consumo_agua_litros" className={themeClasses.label}>
+                            Quantos litros de água consome por dia?
+                            <span className="text-sm text-gray-500 ml-2">(Apenas água pura)</span>
+                          </label>
+                          <input
+                            type="number"
+                            id="consumo_agua_litros"
+                            name="consumo_agua_litros"
+                            value={formData.consumo_agua_litros}
+                            onChange={handleChange}
+                            step="0.1"
+                            min="0"
+                            max="10"
+                            className={themeClasses.input}
+                            required
+                            placeholder="Ex: 2.5 (não incluir chás, café ou outras bebidas)"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="velocidade_comer" className={themeClasses.label}>
+                            Como você considera sua velocidade ao comer?
+                            <span className="text-sm text-gray-500 ml-2">(Tempo médio por refeição)</span>
+                          </label>
+                          <select
+                            id="velocidade_comer"
+                            name="velocidade_comer"
+                            value={formData.velocidade_comer}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="muito_rapido">Muito rápido (menos de 10 minutos)</option>
+                            <option value="rapido">Rápido (10-15 minutos)</option>
+                            <option value="normal">Normal (15-20 minutos)</option>
+                            <option value="devagar">Devagar (20-30 minutos)</option>
+                            <option value="muito_devagar">Muito devagar (mais de 30 minutos)</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="mastigacao" className={themeClasses.label}>
+                            Como você considera sua mastigação?
+                            <span className="text-sm text-gray-500 ml-2">(Número de mastigadas por garfada)</span>
+                          </label>
+                          <select
+                            id="mastigacao"
+                            name="mastigacao"
+                            value={formData.mastigacao}
+                            onChange={handleChange}
+                            className={themeClasses.select}
+                            required
+                          >
+                            <option value="">Selecione</option>
+                            <option value="muito_boa">Muito boa (mais de 20 mastigadas)</option>
+                            <option value="boa">Boa (15-20 mastigadas)</option>
+                            <option value="regular">Regular (10-15 mastigadas)</option>
+                            <option value="ruim">Ruim (5-10 mastigadas)</option>
+                            <option value="muito_ruim">Muito ruim (menos de 5 mastigadas)</option>
+                          </select>
+                        </div>
+
+                        <div className="form-group">
+                          <label className={themeClasses.label}>
+                            Costuma beliscar entre as refeições?
+                            <span className="text-sm text-gray-500 ml-2">(Comer fora dos horários principais)</span>
+                          </label>
+                          <div className="flex space-x-4">
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="belisca_entre_refeicoes"
+                                checked={formData.belisca_entre_refeicoes === true}
+                                onChange={() => setFormData({...formData, belisca_entre_refeicoes: true})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Sim</span>
+                            </label>
+                            <label className={themeClasses.radioLabel}>
+                              <input
+                                type="radio"
+                                name="belisca_entre_refeicoes"
+                                checked={formData.belisca_entre_refeicoes === false}
+                                onChange={() => setFormData({...formData, belisca_entre_refeicoes: false})}
+                                className={themeClasses.radio}
+                              />
+                              <span className="ml-2">Não</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="rotina_diaria" className={themeClasses.label}>
+                            Descreva sua rotina diária
+                            <span className="text-sm text-gray-500 ml-2">(Horários e atividades principais)</span>
+                          </label>
+                          <textarea
+                            id="rotina_diaria"
+                            name="rotina_diaria"
+                            value={formData.rotina_diaria}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            rows={4}
+                            placeholder="Ex: 6h - acordo e tomo café
+8h às 17h - trabalho
+18h - academia
+19h30 - jantar
+22h30 - dormir"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="rotina_alimentar" className={themeClasses.label}>
+                            Descreva sua rotina alimentar
+                            <span className="text-sm text-gray-500 ml-2">(Refeições e horários habituais)</span>
+                          </label>
+                          <textarea
+                            id="rotina_alimentar"
+                            name="rotina_alimentar"
+                            value={formData.rotina_alimentar}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            rows={4}
+                            placeholder="Ex: 7h - café da manhã (pão integral, ovo, café)
+10h - lanche (fruta e iogurte)
+13h - almoço (arroz, feijão, frango, salada)
+16h - lanche (barra de cereal)
+20h - jantar (similar ao almoço)"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="diario_alimentar" className={themeClasses.label}>
+                            Descreva o que comeu nas últimas 24 horas
+                            <span className="text-sm text-gray-500 ml-2">(Inclua TODAS as refeições e bebidas)</span>
+                          </label>
+                          <textarea
+                            id="diario_alimentar"
+                            name="diario_alimentar"
+                            value={formData.diario_alimentar}
+                            onChange={handleChange}
+                            className={themeClasses.input}
+                            rows={4}
+                            placeholder="Ex: Café da manhã: 2 fatias de pão integral, 1 ovo mexido, café com leite
+Lanche: 1 maçã e 1 iogurte natural
+Almoço: 4 colheres de arroz, 2 de feijão, 1 filé de frango grelhado, salada de alface
+Lanche: 1 barra de cereal e 1 café
+Jantar: 1 prato de sopa de legumes com frango
+Bebidas: 2L de água, 3 cafés"
+                          />
                         </div>
                       </div>
-
-                      {/* Diário Alimentar */}
-                      <div className="md:col-span-2 space-y-4">
-                        <label htmlFor="diario_alimentar" className="block text-sm font-medium text-slate-700">
-                          Diário Alimentar*
-                        </label>
-                        <p className="text-sm text-slate-500 mb-2">
-                          Descreva o que você come em um dia típico
-                        </p>
-                        <textarea
-                          id="diario_alimentar"
-                          name="diario_alimentar"
-                          value={formData.diario_alimentar}
-                          onChange={handleChange}
-                          className={`${theme.input} w-full rounded-lg py-3 px-4 ${
-                            formErrors.diario_alimentar ? 'border-red-500' : ''
-                          }`}
-                          rows={6}
-                          placeholder="Ex: Café da manhã: pão com queijo e café | Almoço: arroz, feijão, carne e salada | Jantar: sopa de legumes"
-                        />
-                        {formErrors.diario_alimentar && (
-                          <p className="text-red-500 text-sm mt-1">{formErrors.diario_alimentar}</p>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                  
+                  )}
+
+                  {/* Navigation Buttons */}
                   <div className="flex justify-between mt-8">
-                    <button
-                      type="button"
-                      onClick={prevStep}
-                      className={`${theme.buttonSecondary} px-6 py-2 rounded-lg`}
-                    >
-                      Voltar
-                    </button>
-                    <div className="flex gap-4">
+                    {currentStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={prevStep}
+                        className={`${themeClasses.buttonSecondary} px-6 py-2 rounded-lg`}
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2 inline" />
+                        Voltar
+                      </button>
+                    )}
+                    {currentStep < totalSteps && (
+                      <button
+                        type="button"
+                        onClick={nextStep}
+                        className={`${themeClasses.button} px-6 py-2 rounded-lg ml-auto`}
+                      >
+                        Próximo
+                      </button>
+                    )}
+                    {currentStep === totalSteps && (
                       <button
                         type="submit"
+                        className={`${themeClasses.button} px-6 py-2 rounded-lg ml-auto`}
                         disabled={loading}
-                        className={`${theme.button} px-6 py-2 rounded-lg ${
-                          loading ? 'opacity-70 cursor-not-allowed' : ''
-                        }`}
                       >
                         {loading ? (
                           <div className="flex items-center">
-                            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                             Enviando...
                           </div>
                         ) : (
-                          'Enviar Formulário'
+                          'Enviar Avaliação'
                         )}
                       </button>
-                    </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </form>
-          </div>
+                </form>
+              </div>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Modal de Confirmação */}
+      {showConfirmationMessage && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${themeClasses.card} max-w-md w-full`}>
+            <h3 className={`${themeClasses.cardTitle} mb-4`}>
+              Confirmar Envio
+            </h3>
+            <p className={`${themeClasses.textSecondary} mb-6`}>
+              Você está prestes a enviar sua avaliação nutricional. Tem certeza que deseja continuar?
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setShowConfirmationMessage(false)}
+                className={`${themeClasses.buttonSecondary} px-4 py-2 rounded-lg`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmStep4}
+                className={`${themeClasses.button} px-4 py-2 rounded-lg`}
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Enviando...
+                  </div>
+                ) : (
+                  'Confirmar'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

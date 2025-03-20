@@ -1,10 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { Dumbbell, Save } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import Aurora from '../components/Aurora';
+import { useTheme } from '../contexts/ThemeContext';
+import { getThemeClass } from '../styles/theme';
+import '../styles/global.css';
 
 export function RedefinirSenha() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  
+  const themeClasses = {
+    background: getThemeClass(isDarkMode, 'background'),
+    text: getThemeClass(isDarkMode, 'text'),
+    textSecondary: getThemeClass(isDarkMode, 'textSecondary'),
+    card: `${getThemeClass(isDarkMode, 'cardBg')} border ${getThemeClass(isDarkMode, 'border')} ${getThemeClass(isDarkMode, 'shadow')}`,
+    button: getThemeClass(isDarkMode, 'button'),
+    buttonSecondary: getThemeClass(isDarkMode, 'buttonSecondary'),
+    input: getThemeClass(isDarkMode, 'input'),
+    label: getThemeClass(isDarkMode, 'label'),
+    helperText: getThemeClass(isDarkMode, 'helperText'),
+    errorText: isDarkMode ? 'text-red-400' : 'text-red-600'
+  };
+
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [erro, setErro] = useState('');
@@ -96,93 +116,125 @@ export function RedefinirSenha() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-md w-full glass-effect rounded-2xl p-8">
-        <div className="flex flex-col items-center mb-8">
-          <div className="blue-gradient p-4 rounded-full mb-6">
-            <Dumbbell className="h-12 w-12 text-white" />
-          </div>
-          <h2 className="text-4xl font-bold text-center text-white mb-3">Redefinir Senha</h2>
-          <p className="text-blue-300 text-center text-lg">Crie uma nova senha para sua conta</p>
+    <div className={`min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${themeClasses.background}`}>
+      <Aurora />
+      
+      <div className={`max-w-md w-full space-y-8 ${themeClasses.card} p-8 rounded-xl relative z-10`}>
+        <div>
+          <h2 className={`text-center text-3xl font-extrabold ${themeClasses.text}`}>
+            Redefinir Senha
+          </h2>
+          <p className={`mt-2 text-center ${themeClasses.textSecondary}`}>
+            Digite sua nova senha
+          </p>
         </div>
-        
-        {erro && (
-          <div className="bg-red-500/10 border border-red-500 text-red-100 px-4 py-3 rounded-lg mb-6">
-            <p>{erro}</p>
-            {!tokenValido && (
-              <button 
-                onClick={solicitarNovoLink}
-                className="mt-2 text-red-300 hover:text-red-200 underline text-sm"
-              >
-                Voltar para o login
-              </button>
-            )}
-          </div>
-        )}
-
-        {sucesso && (
-          <div className="bg-green-500/10 border border-green-500 text-green-100 px-4 py-3 rounded-lg mb-6">
-            {sucesso}
-          </div>
-        )}
 
         {tokenValido ? (
-          <form onSubmit={handleRedefinirSenha} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-blue-300 mb-2">Nova Senha</label>
-              <input
-                type="password"
-                value={novaSenha}
-                onChange={(e) => setNovaSenha(e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-slate-800/50 border border-blue-500/30 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 text-white placeholder-slate-400 py-3 px-4 transition-all duration-200"
-                required
-                placeholder="••••••••"
-                minLength={6}
-              />
+          <form className="mt-8 space-y-6" onSubmit={handleRedefinirSenha}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div className="mb-4">
+                <label htmlFor="novaSenha" className={`block text-sm font-medium ${themeClasses.label}`}>
+                  Nova Senha
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="novaSenha"
+                    name="novaSenha"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                    placeholder="Digite sua nova senha"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="confirmarSenha" className={`block text-sm font-medium ${themeClasses.label}`}>
+                  Confirmar Nova Senha
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="confirmarSenha"
+                    name="confirmarSenha"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={confirmarSenha}
+                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                    className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                    placeholder="Confirme sua nova senha"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-blue-300 mb-2">Confirmar Nova Senha</label>
-              <input
-                type="password"
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-                className="mt-1 block w-full rounded-lg bg-slate-800/50 border border-blue-500/30 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 text-white placeholder-slate-400 py-3 px-4 transition-all duration-200"
-                required
-                placeholder="••••••••"
-                minLength={6}
-              />
-            </div>
+            {erro && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className={`text-sm font-medium ${themeClasses.errorText}`}>
+                      {erro}
+                    </h3>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full flex justify-center items-center py-4 px-6 rounded-lg text-base font-semibold text-white transition-all duration-300 ${
-                loading
-                  ? 'opacity-70 cursor-not-allowed'
-                  : 'btn-gradient hover:shadow-lg'
-              }`}
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Atualizando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-5 w-5 mr-2" />
-                  Redefinir Senha
-                </>
-              )}
-            </button>
+            {sucesso && (
+              <div className="rounded-md bg-green-50 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-800">
+                      {sucesso}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`${themeClasses.button} group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2`}
+              >
+                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <Lock className="h-5 w-5 text-white" />
+                </span>
+                {loading ? 'Atualizando...' : 'Redefinir Senha'}
+              </button>
+            </div>
           </form>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-blue-300 mb-4">Aguarde enquanto validamos seu link de recuperação...</p>
-            <div className="animate-spin h-8 w-8 border-b-2 border-blue-400 rounded-full mx-auto"></div>
+          <div className="mt-8 space-y-6">
+            <div className={`text-center ${themeClasses.text}`}>
+              {erro}
+            </div>
+            <button
+              onClick={solicitarNovoLink}
+              className={`${themeClasses.button} w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2`}
+            >
+              Solicitar Novo Link
+            </button>
           </div>
         )}
       </div>

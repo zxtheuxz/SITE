@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedFormRouteProps {
-  component: React.ComponentType;
+  component: React.ComponentType<any>;
   formType: 'fisica' | 'nutricional';
 }
 
@@ -158,6 +158,7 @@ export function ProtectedFormRoute({ component: Component, formType }: Protected
   }, [formType, navigate]);
 
   if (loading) {
+    console.log('ProtectedFormRoute: Carregando...');
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
@@ -166,6 +167,7 @@ export function ProtectedFormRoute({ component: Component, formType }: Protected
   }
 
   if (formJaPreenchido) {
+    console.log('ProtectedFormRoute: Formulário já preenchido, mostrando mensagem');
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
@@ -190,5 +192,26 @@ export function ProtectedFormRoute({ component: Component, formType }: Protected
     );
   }
 
-  return <Component />;
+  console.log('ProtectedFormRoute: Renderizando componente', formType);
+  try {
+    return <Component />;
+  } catch (error) {
+    console.error('Erro ao renderizar componente:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Erro ao carregar formulário</h2>
+          <p className="text-gray-600 mb-6">
+            Ocorreu um erro ao carregar o formulário. Por favor, tente novamente mais tarde.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Voltar ao Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 } 

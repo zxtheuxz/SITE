@@ -3,9 +3,27 @@ import { Layout } from '../components/Layout';
 import { supabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { Lock, Save } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
+import { getThemeClass } from '../styles/theme';
 import '../styles/global.css';
 
 export function Configuracoes() {
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  
+  const themeClasses = {
+    background: getThemeClass(isDarkMode, 'background'),
+    text: getThemeClass(isDarkMode, 'text'),
+    textSecondary: getThemeClass(isDarkMode, 'textSecondary'),
+    card: `${getThemeClass(isDarkMode, 'cardBg')} border ${getThemeClass(isDarkMode, 'border')} ${getThemeClass(isDarkMode, 'shadow')}`,
+    button: getThemeClass(isDarkMode, 'button'),
+    buttonSecondary: getThemeClass(isDarkMode, 'buttonSecondary'),
+    input: getThemeClass(isDarkMode, 'input'),
+    label: getThemeClass(isDarkMode, 'label'),
+    helperText: getThemeClass(isDarkMode, 'helperText'),
+    errorText: isDarkMode ? 'text-red-400' : 'text-red-600'
+  };
+
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -79,82 +97,107 @@ export function Configuracoes() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      <div className={`flex items-center justify-center min-h-screen ${themeClasses.background}`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-600"></div>
       </div>
     );
   }
 
   return (
     <Layout>
-      <div className="p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Configurações</h1>
-          <p className="text-gray-600">Altere sua senha de acesso</p>
-        </div>
-        
-        {mensagem.texto && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            mensagem.tipo === 'sucesso' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
-            {mensagem.texto}
+      <div className={`p-8 ${themeClasses.background} min-h-screen`}>
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className={`text-3xl font-bold ${themeClasses.text}`}>Configurações</h1>
+            <p className={`${themeClasses.textSecondary}`}>Altere sua senha de acesso</p>
           </div>
-        )}
-        
-        <div className="max-w-md mx-auto">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center">
-              <Lock className="h-5 w-5 mr-2 text-blue-500" />
-              Alterar Senha
-            </h2>
-            
-            <form onSubmit={alterarSenha} className="space-y-4">
+          
+          {mensagem.texto && (
+            <div className={`mb-6 p-4 rounded-lg ${
+              mensagem.tipo === 'sucesso' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {mensagem.texto}
+            </div>
+          )}
+          
+          <div className={`${themeClasses.card} p-8 rounded-xl`}>
+            <form onSubmit={alterarSenha} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Senha Atual</label>
-                <input 
-                  type="password" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Digite sua senha atual"
-                  value={senhaAtual}
-                  onChange={(e) => setSenhaAtual(e.target.value)}
-                  required
-                />
+                <label htmlFor="senhaAtual" className={`block text-sm font-medium ${themeClasses.label}`}>
+                  Senha Atual
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="senhaAtual"
+                    name="senhaAtual"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    value={senhaAtual}
+                    onChange={(e) => setSenhaAtual(e.target.value)}
+                    className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                    placeholder="Digite sua senha atual"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nova Senha</label>
-                <input 
-                  type="password" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Digite sua nova senha"
-                  value={novaSenha}
-                  onChange={(e) => setNovaSenha(e.target.value)}
-                  required
-                  minLength={6}
-                />
-                <p className="text-xs text-gray-500 mt-1">A senha deve ter pelo menos 6 caracteres</p>
+                <label htmlFor="novaSenha" className={`block text-sm font-medium ${themeClasses.label}`}>
+                  Nova Senha
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="novaSenha"
+                    name="novaSenha"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={novaSenha}
+                    onChange={(e) => setNovaSenha(e.target.value)}
+                    className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                    placeholder="Digite sua nova senha"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Nova Senha</label>
-                <input 
-                  type="password" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Confirme sua nova senha"
-                  value={confirmarSenha}
-                  onChange={(e) => setConfirmarSenha(e.target.value)}
-                  required
-                />
+                <label htmlFor="confirmarSenha" className={`block text-sm font-medium ${themeClasses.label}`}>
+                  Confirmar Nova Senha
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    id="confirmarSenha"
+                    name="confirmarSenha"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    value={confirmarSenha}
+                    onChange={(e) => setConfirmarSenha(e.target.value)}
+                    className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                    placeholder="Confirme sua nova senha"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                </div>
               </div>
-              
-              <div className="pt-4 border-t border-gray-200">
-                <button 
-                  type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+
+              <div>
+                <button
+                  type="submit"
                   disabled={salvando}
+                  className={`${themeClasses.button} group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2`}
                 >
-                  <Save className="h-4 w-4 mr-2" />
-                  {salvando ? 'Alterando...' : 'Alterar Senha'}
+                  <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                    <Save className="h-5 w-5 text-white" />
+                  </span>
+                  {salvando ? 'Salvando...' : 'Salvar Nova Senha'}
                 </button>
               </div>
             </form>

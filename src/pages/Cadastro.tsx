@@ -1,12 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { UserPlus, CheckCircle, Lock, Mail, User, Phone } from 'lucide-react';
 import Aurora from '../components/Aurora';
+import { useTheme } from '../contexts/ThemeContext';
+import { getThemeClass } from '../styles/theme';
 import '../styles/global.css';
 
 export function Cadastro() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
+  
+  const themeClasses = {
+    background: getThemeClass(isDarkMode, 'background'),
+    text: getThemeClass(isDarkMode, 'text'),
+    textSecondary: getThemeClass(isDarkMode, 'textSecondary'),
+    card: `${getThemeClass(isDarkMode, 'cardBg')} border ${getThemeClass(isDarkMode, 'border')} ${getThemeClass(isDarkMode, 'shadow')}`,
+    button: getThemeClass(isDarkMode, 'button'),
+    buttonSecondary: getThemeClass(isDarkMode, 'buttonSecondary'),
+    input: getThemeClass(isDarkMode, 'input'),
+    select: getThemeClass(isDarkMode, 'select'),
+    label: getThemeClass(isDarkMode, 'label'),
+    helperText: getThemeClass(isDarkMode, 'helperText'),
+    errorText: isDarkMode ? 'text-red-400' : 'text-red-600'
+  };
+
   const [formData, setFormData] = useState({
     nomeCompleto: '',
     email: '',
@@ -21,6 +40,34 @@ export function Cadastro() {
   const [telefoneStatus, setTelefoneStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
   const [telefoneMessage, setTelefoneMessage] = useState('');
   const telefoneTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Garantir que o fundo seja preto ao carregar a página
+  useEffect(() => {
+    // Aplicar fundo preto
+    document.documentElement.style.backgroundColor = '#000000';
+    document.body.style.backgroundColor = '#000000';
+    document.documentElement.style.background = '#000000';
+    document.body.style.background = '#000000';
+    
+    // Adicionar um estilo global para garantir que o fundo seja preto
+    const style = document.createElement('style');
+    style.textContent = `
+      html, body, #root, .min-h-screen {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      // Limpar o estilo ao desmontar
+      document.head.querySelectorAll('style').forEach(s => {
+        if (s.textContent?.includes('background: #000000')) {
+          document.head.removeChild(s);
+        }
+      });
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -275,37 +322,24 @@ export function Cadastro() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ 
-        background: 'linear-gradient(135deg, #0f0f1a 0%, #0a0a14 100%)' 
-      }}>
-        <Aurora 
-          colorStops={["#3A29FF", "#FF94B4", "#FF3232"]}
-          blend={0.5}
-          amplitude={1.0}
-          speed={0.5}
-        />
+      <div className={`min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${themeClasses.background}`}>
+        <Aurora />
         
-        <div className="max-w-md w-full p-6 sm:p-8 relative z-10">
-          <div className="flex flex-col items-center text-center">
-            <div className="w-20 h-20 flex items-center justify-center rounded-full mb-6" style={{ 
-              background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-              boxShadow: '0 8px 32px rgba(79, 70, 229, 0.5)',
-              backdropFilter: 'blur(10px)',
-              border: 'none'
-            }}>
-              <CheckCircle className="h-10 w-10 text-white" />
-            </div>
-            <h2 className="text-3xl font-bold text-center mb-2 text-gradient" style={{
-              textShadow: '0 2px 10px rgba(253, 252, 255, 0.5)',
-              color: 'white'
-            }}>Cadastro realizado!</h2>
-            <p className="text-center" style={{ 
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '0.95rem',
-              letterSpacing: '0.3px'
-            }}>
-              Sua conta foi criada com sucesso. Redirecionando para a página de login...
+        <div className={`max-w-md w-full space-y-8 ${themeClasses.card} p-8 rounded-xl relative z-10`}>
+          <div className="flex flex-col items-center justify-center text-center">
+            <CheckCircle className="h-16 w-16 text-orange-500 mb-4" />
+            <h2 className={`text-2xl font-bold mb-2 ${themeClasses.text}`}>
+              Cadastro realizado com sucesso!
+            </h2>
+            <p className={`${themeClasses.textSecondary} mb-6`}>
+              Sua conta foi criada. Você já pode fazer login.
             </p>
+            <button
+              onClick={() => navigate('/login')}
+              className={`${themeClasses.button} w-full flex justify-center py-2 px-4 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2`}
+            >
+              Ir para o Login
+            </button>
           </div>
         </div>
       </div>
@@ -313,313 +347,185 @@ export function Cadastro() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ 
-      background: 'linear-gradient(135deg, #0f0f1a 0%, #0a0a14 100%)' 
-    }}>
-      <Aurora 
-        colorStops={["#3A29FF", "#FF94B4", "#FF3232"]}
-        blend={0.5}
-        amplitude={1.0}
-        speed={0.5}
-      />
+    <div className={`min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 ${themeClasses.background}`}>
+      <Aurora />
       
-      <div className="max-w-md w-full p-6 sm:p-8 relative z-10" style={{ 
-        backgroundColor: 'transparent',
-        backdropFilter: 'blur(5px)'
-      }}>
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 flex items-center justify-center rounded-full mb-6" style={{ 
-            background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-            boxShadow: '0 8px 32px rgba(79, 70, 229, 0.5)',
-            backdropFilter: 'blur(10px)',
-            border: 'none'
-          }}>
-            <UserPlus className="h-10 w-10 text-white" />
-          </div>
-          <h2 className="text-3xl font-bold text-center mb-2 text-gradient" style={{
-            textShadow: '0 2px 10px rgba(253, 252, 255, 0.5)',
-            color: 'white'
-          }}>Comece agora</h2>
-          <p className="text-center" style={{ 
-            color: 'rgba(255, 255, 255, 0.8)',
-            fontSize: '0.95rem',
-            letterSpacing: '0.3px'
-          }}>
-            Cadastre-se para acessar seu programa exclusivo
+      <div className={`max-w-md w-full space-y-8 ${themeClasses.card} p-8 rounded-xl relative z-10`}>
+        <div>
+          <h2 className={`text-center text-3xl font-extrabold ${themeClasses.text}`}>
+            Criar nova conta
+          </h2>
+          <p className={`mt-2 text-center ${themeClasses.textSecondary}`}>
+            Ou{' '}
+            <Link to="/login" className="font-medium text-orange-600 hover:text-orange-500">
+              faça login em sua conta existente
+            </Link>
           </p>
         </div>
-        
-        {erro && (
-          <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg mb-6">
-            {erro}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="form-group">
-            <label className="form-label flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-              <User size={18} style={{ color: '#6366F1' }} />
-              Nome Completo
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                name="nomeCompleto"
-                value={formData.nomeCompleto}
-                onChange={handleChange}
-                className="form-control w-full focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
-                required
-                placeholder="Seu nome completo"
-                style={{ 
-                  backgroundColor: 'rgba(30, 30, 50, 0.5)', 
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '14px 16px',
-                  outline: 'none',
-                  fontSize: '1rem',
-                  color: 'white',
-                  height: '50px',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(10px)'
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-              <Mail size={18} style={{ color: '#6366F1' }} />
-              Email
-            </label>
-            <div className="relative">
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="form-control w-full focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
-                required
-                placeholder="seu@email.com"
-                style={{ 
-                  backgroundColor: 'rgba(30, 30, 50, 0.5)', 
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '14px 16px',
-                  outline: 'none',
-                  fontSize: '1rem',
-                  color: 'white',
-                  height: '50px',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(10px)'
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-              <Phone size={18} style={{ color: '#6366F1' }} />
-              Telefone (DDD + número)
-            </label>
-            <div className="relative">
-              <input
-                type="tel"
-                name="telefone"
-                value={formData.telefone}
-                onChange={handleChange}
-                placeholder="11999999999"
-                maxLength={11}
-                className="form-control w-full focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
-                required
-                style={{ 
-                  backgroundColor: 'rgba(30, 30, 50, 0.5)', 
-                  border: telefoneStatus === 'valid' 
-                    ? '1px solid rgba(34, 197, 94, 0.5)'
-                    : telefoneStatus === 'invalid'
-                    ? '1px solid rgba(239, 68, 68, 0.5)'
-                    : '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '14px 16px',
-                  outline: 'none',
-                  fontSize: '1rem',
-                  color: 'white',
-                  height: '50px',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(10px)'
-                }}
-              />
-              
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                {telefoneStatus === 'checking' && (
-                  <svg className="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                )}
-                
-                {telefoneStatus === 'valid' && (
-                  <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                )}
-                
-                {telefoneStatus === 'invalid' && (
-                  <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                  </svg>
-                )}
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div className="mb-4">
+              <label htmlFor="nomeCompleto" className={`block text-sm font-medium ${themeClasses.label}`}>
+                Nome Completo
+              </label>
+              <div className="mt-1 relative">
+                <input
+                  id="nomeCompleto"
+                  name="nomeCompleto"
+                  type="text"
+                  required
+                  value={formData.nomeCompleto}
+                  onChange={handleChange}
+                  className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                  placeholder="Digite seu nome completo"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
               </div>
             </div>
-            
-            {telefoneMessage && (
-              <p className="mt-1 text-sm" style={{ 
-                color: telefoneStatus === 'valid' ? 'rgba(34, 197, 94, 0.9)' : 'rgba(239, 68, 68, 0.9)'
-              }}>
-                {telefoneMessage}
-              </p>
-            )}
-            
-            <p className="mt-1 text-sm" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-              Digite apenas números: DDD + número (11 dígitos)
-            </p>
-          </div>
 
-          <div className="form-group">
-            <label className="form-label flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-              <User size={18} style={{ color: '#6366F1' }} />
-              Sexo
-            </label>
-            <div className="relative">
+            <div className="mb-4">
+              <label htmlFor="email" className={`block text-sm font-medium ${themeClasses.label}`}>
+                E-mail
+              </label>
+              <div className="mt-1 relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                  placeholder="Digite seu e-mail"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="telefone" className={`block text-sm font-medium ${themeClasses.label}`}>
+                Telefone
+              </label>
+              <div className="mt-1 relative">
+                <input
+                  id="telefone"
+                  name="telefone"
+                  type="tel"
+                  required
+                  value={formData.telefone}
+                  onChange={handleChange}
+                  className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                  placeholder="Digite seu telefone"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+              {telefoneMessage && (
+                <p className={`mt-2 text-sm ${telefoneStatus === 'valid' ? 'text-green-600' : themeClasses.errorText}`}>
+                  {telefoneMessage}
+                </p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="sexo" className={`block text-sm font-medium ${themeClasses.label}`}>
+                Sexo
+              </label>
               <select
+                id="sexo"
                 name="sexo"
+                required
                 value={formData.sexo}
                 onChange={handleChange}
-                className="form-control w-full focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
-                required
-                style={{ 
-                  backgroundColor: 'rgba(30, 30, 50, 0.5)', 
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '14px 16px',
-                  outline: 'none',
-                  fontSize: '1rem',
-                  color: 'white',
-                  height: '50px',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(10px)',
-                  appearance: 'none'
-                }}
+                className={`${themeClasses.select} block w-full px-3 py-2 rounded-md`}
               >
-                <option value="">Selecione</option>
+                <option value="">Selecione seu sexo</option>
                 <option value="masculino">Masculino</option>
                 <option value="feminino">Feminino</option>
-                <option value="outro">Outro</option>
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="senha" className={`block text-sm font-medium ${themeClasses.label}`}>
+                Senha
+              </label>
+              <div className="mt-1 relative">
+                <input
+                  id="senha"
+                  name="senha"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.senha}
+                  onChange={handleChange}
+                  className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                  placeholder="Digite sua senha"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="confirmarSenha" className={`block text-sm font-medium ${themeClasses.label}`}>
+                Confirmar Senha
+              </label>
+              <div className="mt-1 relative">
+                <input
+                  id="confirmarSenha"
+                  name="confirmarSenha"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmarSenha}
+                  onChange={handleChange}
+                  className={`${themeClasses.input} block w-full px-3 py-2 rounded-md`}
+                  placeholder="Confirme sua senha"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-              <Lock size={18} style={{ color: '#6366F1' }} />
-              Senha
-            </label>
-            <div className="relative">
-              <input
-                type="password"
-                name="senha"
-                value={formData.senha}
-                onChange={handleChange}
-                className="form-control w-full focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
-                required
-                placeholder="••••••••"
-                style={{ 
-                  backgroundColor: 'rgba(30, 30, 50, 0.5)', 
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '14px 16px',
-                  outline: 'none',
-                  fontSize: '1rem',
-                  color: 'white',
-                  height: '50px',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(10px)'
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-              <Lock size={18} style={{ color: '#6366F1' }} />
-              Confirmar Senha
-            </label>
-            <div className="relative">
-              <input
-                type="password"
-                name="confirmarSenha"
-                value={formData.confirmarSenha}
-                onChange={handleChange}
-                className="form-control w-full focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30"
-                required
-                placeholder="••••••••"
-                style={{ 
-                  backgroundColor: 'rgba(30, 30, 50, 0.5)', 
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '8px',
-                  padding: '14px 16px',
-                  outline: 'none',
-                  fontSize: '1rem',
-                  color: 'white',
-                  height: '50px',
-                  transition: 'all 0.2s ease',
-                  backdropFilter: 'blur(10px)'
-                }}
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary w-full relative overflow-hidden hover:translate-y-[-2px] hover:shadow-lg"
-            style={{ 
-              background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2)',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '14px 24px',
-              fontSize: '1rem',
-              fontWeight: '600',
-              letterSpacing: '0.5px',
-              height: '50px',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {loading ? (
-              <>
-                <span className="opacity-0">Cadastrar</span>
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          {erro && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                </span>
-              </>
-            ) : 'Cadastrar'}
-          </button>
-        </form>
+                </div>
+                <div className="ml-3">
+                  <h3 className={`text-sm font-medium ${themeClasses.errorText}`}>
+                    {erro}
+                  </h3>
+                </div>
+              </div>
+            </div>
+          )}
 
-        <p className="mt-8 text-center text-sm" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-          Já tem uma conta?{' '}
-          <Link to="/login" className="font-medium hover:underline" style={{ color: '#6366F1' }}>
-            Faça login
-          </Link>
-        </p>
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+              className={`${themeClasses.button} group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2`}
+            >
+              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                <UserPlus className="h-5 w-5 text-white" />
+              </span>
+              {loading ? 'Cadastrando...' : 'Cadastrar'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
