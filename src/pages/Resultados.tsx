@@ -598,10 +598,10 @@ export function Resultados() {
         ) : (
           <div className="animate-fadeIn">
             <div className="mb-6">
-              <div className="flex flex-col sm:flex-row gap-4 mb-4 w-[400px] flex-shrink-0">
+              <div className="flex flex-col sm:flex-row gap-4 mb-4 w-full sm:w-[400px] flex-shrink-0">
                 <button
                   onClick={() => setActiveTab('fisica')}
-                  className={`inline-flex items-center justify-center w-[200px] px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  className={`inline-flex items-center justify-center w-full sm:w-[200px] px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'fisica'
                       ? 'bg-orange-500 text-white'
                       : isDarkMode 
@@ -614,7 +614,7 @@ export function Resultados() {
                 </button>
                 <button
                   onClick={() => setActiveTab('nutricional')}
-                  className={`inline-flex items-center justify-center w-[200px] px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  className={`inline-flex items-center justify-center w-full sm:w-[200px] px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === 'nutricional'
                       ? 'bg-orange-500 text-white'
                       : isDarkMode 

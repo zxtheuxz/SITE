@@ -405,6 +405,15 @@ export function AvaliacaoFisica() {
     <Layout>
       <div className={`min-h-screen ${themeClasses.background} px-4 py-8`}>
         <div className="max-w-7xl mx-auto">
+          {/* Botão Voltar para Dashboard */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className={`flex items-center mb-6 px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors`}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para Dashboard
+          </button>
+
           {formSubmitted ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fadeIn">
               <div className="bg-orange-600/20 rounded-full p-6 mb-6 shadow-lg">

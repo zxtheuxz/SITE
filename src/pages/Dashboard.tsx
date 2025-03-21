@@ -39,6 +39,8 @@ export function Dashboard() {
   const [showResultadoFisica, setShowResultadoFisica] = useState(false);
   const [showResultadoNutricional, setShowResultadoNutricional] = useState(false);
   const [sucesso, setSucesso] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallButton, setShowInstallButton] = useState(false);
 
   // Adicionar um log para depuração
   useEffect(() => {
@@ -255,6 +257,34 @@ export function Dashboard() {
     getUser();
   }, [navigate]);
 
+  // Adicionar este useEffect no início do componente
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Previne o comportamento padrão
+      e.preventDefault();
+      // Guarda o evento para usar depois
+      setDeferredPrompt(e);
+      // Mostra o botão de instalação
+      setShowInstallButton(true);
+    });
+  }, []);
+
+  // Função para instalar o PWA
+  const installPWA = async () => {
+    if (!deferredPrompt) return;
+
+    // Mostra o prompt de instalação
+    deferredPrompt.prompt();
+
+    // Espera o usuário responder ao prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    // Limpa o prompt guardado
+    setDeferredPrompt(null);
+    // Esconde o botão
+    setShowInstallButton(false);
+  };
+
   // Função para ir para a aba de resultados
   const irParaResultados = () => {
     console.log('Navegando para a página de resultados');
@@ -337,6 +367,32 @@ export function Dashboard() {
     <Layout>
       <div className={`min-h-screen ${getThemeClass(isDarkMode, 'background')} px-4 py-8`}>
         <div className="max-w-7xl mx-auto">
+          {/* Adicionar o botão de instalação logo após o header */}
+          {showInstallButton && (
+            <div className="mb-6 p-4 bg-indigo-600 dark:bg-indigo-500 rounded-lg shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-white">
+                      Instale nosso app para melhor experiência
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={installPWA}
+                  className="ml-4 inline-flex px-3 py-1 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Instalar App
+                </button>
+              </div>
+            </div>
+          )}
+          
           {sucesso ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fadeIn">
               <div className={`${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'} rounded-full p-6 mb-6`}>
@@ -357,16 +413,16 @@ export function Dashboard() {
             </div>
           ) : (
             <>
-              <div className="mb-8 flex justify-between items-center">
-                <div>
-                  <h1 className={`text-3xl font-bold ${getThemeClass(isDarkMode, 'text')} mb-2`}>
+              <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div className="w-full md:w-auto mb-4 md:mb-0">
+                  <h1 className={`text-2xl md:text-3xl font-bold ${getThemeClass(isDarkMode, 'text')} mb-2`}>
                     Bem-vindo(a), {getNomeExibicao()}!
                   </h1>
-                  <p className={getThemeClass(isDarkMode, 'textSecondary')}>
+                  <p className={`text-sm md:text-base ${getThemeClass(isDarkMode, 'textSecondary')}`}>
                     Complete suas avaliações para receber seu plano personalizado.
                   </p>
                 </div>
-                <div className="flex space-x-4">
+                <div className="flex space-x-4 w-full md:w-auto justify-start">
                   <Link to="/avaliacoes" className="pb-2 md:pb-4 px-1 text-sm md:text-base text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 font-medium flex items-center gap-2">
                     <ClipboardList size={20} />
                     <span>Avaliações</span>
