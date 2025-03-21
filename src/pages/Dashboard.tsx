@@ -259,34 +259,52 @@ export function Dashboard() {
 
   // Adicionar este useEffect no início do componente
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Previne o comportamento padrão
-      e.preventDefault();
-      // Guarda o evento para usar depois
-      setDeferredPrompt(e);
-      // Mostra o botão de instalação
-      setShowInstallButton(true);
-    });
-
     // Verifica se o app já está instalado
-    window.addEventListener('appinstalled', () => {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
       setShowInstallButton(false);
-    });
+      return;
+    }
+
+    // Verifica se o navegador suporta PWA
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      // Verifica se o app já está instalado
+      if (window.matchMedia('(display-mode: standalone)').matches) {
+        setShowInstallButton(false);
+        return;
+      }
+
+      // Adiciona o listener para o evento beforeinstallprompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Previne o comportamento padrão
+        e.preventDefault();
+        // Guarda o evento para usar depois
+        setDeferredPrompt(e);
+        // Mostra o botão de instalação
+        setShowInstallButton(true);
+      });
+
+      // Verifica se o app já está instalado
+      window.addEventListener('appinstalled', () => {
+        setShowInstallButton(false);
+      });
+    }
   }, []);
 
   // Função para instalar o PWA
   const installPWA = async () => {
     if (!deferredPrompt) return;
 
-    // Mostra o prompt de instalação
-    deferredPrompt.prompt();
-
-    // Espera o usuário responder ao prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    // Não limpa mais o prompt guardado para manter o botão visível
-    // setDeferredPrompt(null);
-    // setShowInstallButton(false);
+    try {
+      // Mostra o prompt de instalação
+      deferredPrompt.prompt();
+      // Espera o usuário responder ao prompt
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      // Se o usuário aceitou a instalação, o evento appinstalled será disparado
+      // e o botão será escondido automaticamente
+    } catch (error) {
+      console.error('Erro ao instalar o PWA:', error);
+    }
   };
 
   // Função para ir para a aba de resultados
