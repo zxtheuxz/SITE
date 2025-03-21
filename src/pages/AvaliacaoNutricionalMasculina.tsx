@@ -20,10 +20,14 @@ export function AvaliacaoNutricionalMasculina() {
     card: `${getThemeClass(isDarkMode, 'cardBg')} border ${getThemeClass(isDarkMode, 'border')} ${getThemeClass(isDarkMode, 'shadow')}`,
     button: getThemeClass(isDarkMode, 'button'),
     buttonSecondary: getThemeClass(isDarkMode, 'buttonSecondary'),
-    input: getThemeClass(isDarkMode, 'input'),
+    input: `${getThemeClass(isDarkMode, 'input')} ${
+      isDarkMode 
+        ? 'bg-gray-800 text-white border-gray-600 focus:border-orange-500' 
+        : 'bg-white text-gray-900 border-gray-300 focus:border-orange-500'
+    } block w-full rounded-lg px-4 py-2.5 text-sm transition-colors duration-200 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500/20`,
     select: getThemeClass(isDarkMode, 'select'),
-    label: getThemeClass(isDarkMode, 'label'),
-    helperText: getThemeClass(isDarkMode, 'helperText'),
+    label: `${isDarkMode ? 'text-gray-200' : 'text-gray-700'} font-medium`,
+    helperText: `${isDarkMode ? 'text-gray-400' : 'text-gray-600'} text-sm`,
     radio: getThemeClass(isDarkMode, 'radio'),
     radioLabel: getThemeClass(isDarkMode, 'radioLabel'),
     errorText: isDarkMode ? 'text-red-400' : 'text-red-600',
@@ -446,6 +450,15 @@ export function AvaliacaoNutricionalMasculina() {
     <Layout>
       <div className={`min-h-screen ${themeClasses.background} px-4 py-8`}>
         <div className="max-w-7xl mx-auto">
+          {/* Botão Voltar para Dashboard */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className={`flex items-center mb-6 px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors`}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar para Dashboard
+          </button>
+
           {sucesso ? (
             <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fadeIn">
               <div className={`${isDarkMode ? 'bg-green-900/30' : 'bg-green-100'} rounded-full p-6 mb-6`}>
@@ -562,11 +575,29 @@ export function AvaliacaoNutricionalMasculina() {
                             Ex: 15/05/1985
                           </p>
                           <input
-                            type="date"
+                            type="text"
                             name="data_nascimento"
                             value={formData.data_nascimento}
-                            onChange={handleChange}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              let formattedValue = value.replace(/\D/g, '');
+                              
+                              if (formattedValue.length > 0) {
+                                if (formattedValue.length > 2 && formattedValue.length <= 4) {
+                                  formattedValue = formattedValue.slice(0, 2) + '/' + formattedValue.slice(2);
+                                } else if (formattedValue.length > 4) {
+                                  formattedValue = formattedValue.slice(0, 2) + '/' + formattedValue.slice(2, 4) + '/' + formattedValue.slice(4, 8);
+                                }
+                              }
+                              
+                              setFormData(prev => ({
+                                ...prev,
+                                data_nascimento: formattedValue
+                              }));
+                            }}
                             className={themeClasses.input}
+                            placeholder="DD/MM/AAAA"
+                            maxLength={10}
                             required
                           />
                         </div>

@@ -267,6 +267,11 @@ export function Dashboard() {
       // Mostra o botão de instalação
       setShowInstallButton(true);
     });
+
+    // Verifica se o app já está instalado
+    window.addEventListener('appinstalled', () => {
+      setShowInstallButton(false);
+    });
   }, []);
 
   // Função para instalar o PWA
@@ -279,10 +284,9 @@ export function Dashboard() {
     // Espera o usuário responder ao prompt
     const { outcome } = await deferredPrompt.userChoice;
     
-    // Limpa o prompt guardado
-    setDeferredPrompt(null);
-    // Esconde o botão
-    setShowInstallButton(false);
+    // Não limpa mais o prompt guardado para manter o botão visível
+    // setDeferredPrompt(null);
+    // setShowInstallButton(false);
   };
 
   // Função para ir para a aba de resultados
@@ -385,7 +389,7 @@ export function Dashboard() {
                 </div>
                 <button
                   onClick={installPWA}
-                  className="ml-4 inline-flex px-3 py-1 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="ml-4 inline-flex px-4 py-2 rounded-md text-sm font-medium text-indigo-600 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
                 >
                   Instalar App
                 </button>
